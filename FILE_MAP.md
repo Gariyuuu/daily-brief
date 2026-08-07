@@ -31,7 +31,7 @@ Practical map of every file that matters for future work. Paths are relative to
 |---|---|---|---|---|
 | `digest/route.ts` | `GET /api/digest?date=`, `POST /api/digest` | GET reads (rebuilds if today + stale/missing); POST force-rebuilds today | none | Medium — this is the "Refresh Now" backend |
 | `cron/route.ts` | `GET /api/cron` | Scheduled daily rebuild, triggered by Vercel Cron | Bearer `CRON_SECRET`, **optional** (skipped if unset) | **High** — auth gap here is a real security concern, see SECURITY.md |
-| `chat/route.ts` | `POST /api/chat` | Anthropic-backed Q&A over a day's digest | none (relies on `ANTHROPIC_API_KEY` presence) | Medium — costs real Anthropic API usage per call, no rate limit |
+| `chat/route.ts` | `POST /api/chat` | Self-hosted-platform-backed Q&A over a day's digest | none (relies on `AI_PLATFORM_API_KEY` presence) | Medium — costs real usage per call against the self-hosted platform, no rate limit |
 
 ## Pages (`src/app/`)
 
@@ -81,7 +81,7 @@ Practical map of every file that matters for future work. Paths are relative to
 - **Change the cron schedule**: edit `vercel.json`'s `crons[0].schedule`, then confirm
   the change is reflected in the deployed Vercel project (redeploy required).
 - **Change the chat model or system prompt**: `src/app/api/chat/route.ts` — model ID and
-  `system` string are both inline in the `client.messages.create()` call.
+  `system` string are both inline in the `client.chat.completions.create()` call.
 - **Change the home timezone**: set `BRIEF_TIMEZONE` env var (no code change needed;
   defaults to `"America/New_York"` in `src/lib/utils/dates.ts`).
 - **Change the theme colors**: `src/app/globals.css`'s `:root` and

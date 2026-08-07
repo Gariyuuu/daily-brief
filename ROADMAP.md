@@ -44,8 +44,9 @@ describes it should do, end to end.
 
 ## Post-MVP
 
-- Verify and, if needed, fix the chat model ID (`claude-opus-4-8`) against Anthropic's
-  live model catalog (TASKS.md DB-006).
+- ~~Verify the chat model ID against Anthropic's live model catalog~~ — **superseded**:
+  chat no longer uses Anthropic at all (migrated to a self-hosted platform, commit
+  `173c9ac`, TASKS.md DB-006 resolved).
 - Resolve the `THESPORTSDB_KEY` dead-config situation — either remove it or actually use
   it (TASKS.md DB-004).
 - Remove the unused `date-fns` dependency, or find a real use for it (TASKS.md DB-005).

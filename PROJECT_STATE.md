@@ -16,27 +16,44 @@ request (HTTP 200, real reply). See SESSION_LOG.md Session 2 for full detail. Th
 of this file (below) describes the state as of the original documentation audit and is
 otherwise still accurate — only the chat/LLM facts changed.
 
+**Update (2026-08-07, checkpoint session)**: a "final transfer checkpoint" pass
+re-verified all 17 docs against the live repo. Both prior sessions' doc changes
+(`ab7a901`) and code changes (`173c9ac`) are now committed and pushed to `origin/main` —
+the "Git state" section below was stale (it still named `0cd8c68`/3 commits as latest)
+and has been corrected. Several sibling docs (FEATURES.md, ARCHITECTURE.md, CHANGELOG.md,
+API_REFERENCE.md, SECURITY.md, DEPLOYMENT.md, FILE_MAP.md, ROADMAP.md, TESTING.md,
+SETUP.md, DECISIONS.md, HANDOFF.md) still described the pre-migration Anthropic/
+`ANTHROPIC_API_KEY`/`claude-opus-4-8` chat implementation as current — all corrected in
+this pass to match the actual `openai`-SDK-against-self-hosted-platform implementation
+in `src/app/api/chat/route.ts`. No application code was changed in this pass.
+`npx tsc --noEmit`, `npm run lint`, and `npm run build` re-verified clean. `.env.example`
+still holds live-looking GNews/FMP/Spotify/Upstash values on disk (never committed) —
+same finding as before, still unresolved (TASKS.md DB-002).
+
 ## Git state
 
 - **Branch**: `main` (only branch; `git branch -a` shows no other local or remote
   branches besides `remotes/origin/main`)
 - **Remote**: `origin` → `https://github.com/Gariyuuu/daily-brief.git`
-- **Latest commit**: `0cd8c68ce8e4612ff0836947292679ccf7de36c1` — "Add custom favicon
-  matching the app's newspaper branding" (2026-08-06 03:33:50 -0700)
-- **Full commit history** (3 commits total):
+- **Latest commit**: `173c9ac` — "Switch chat feature from Anthropic to self-hosted
+  goat-ai-platform" (2026-08-06 22:27:17 -0700). Confirmed via `git log --oneline -5` and
+  `git fetch origin` during this checkpoint session (2026-08-07): branch is up to date
+  with `origin/main`, 0 ahead / 0 behind.
+- **Full commit history** (5 commits total):
   1. `717550f` — "Initial commit from Create Next App" (2026-07-21 23:57:34 -0700)
   2. `e46139d` — "Add digest sources, archive view, and chat widget" (2026-07-24
      13:04:18 -0700)
   3. `0cd8c68` — "Add custom favicon matching the app's newspaper branding" (2026-08-06
-     03:33:50 -0700, HEAD)
-- **Working tree**: clean at audit start (`git status` → "nothing to commit, working
-  tree clean") and clean at audit end — this audit only added/edited the 17 markdown
-  files listed in HANDOFF.md; nothing else was touched, and nothing was committed.
-- **Untracked files during audit**: none besides the new documentation files this
-  session created (which remain uncommitted, per the task's instruction not to commit).
-  `.env.local` and `.env.example` exist on disk but are correctly excluded by
-  `.gitignore`'s `.env*` rule and have never been committed (`git log --all --full-history
-  -- .env.local` returns nothing).
+     03:33:50 -0700)
+  4. `ab7a901` — "docs: add full handoff documentation system" (2026-08-06 20:20:07
+     -0700) — the original 17-file doc build this audit describes below.
+  5. `173c9ac` — "Switch chat feature from Anthropic to self-hosted goat-ai-platform"
+     (2026-08-06 22:27:17 -0700, HEAD) — Session 2's chat migration, committed.
+- **Working tree**: clean (`git status` → "nothing to commit, working tree clean") as of
+  this 2026-08-07 checkpoint pass, before this pass's own doc edits.
+- **Untracked files**: none. `.env.local` and `.env.example` exist on disk but are
+  correctly excluded by `.gitignore`'s `.env*` rule and have never been committed
+  (`git log --all --full-history -- .env.local` returns nothing).
 
 ## Active objective
 

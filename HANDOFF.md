@@ -20,18 +20,18 @@ with zero configured API keys (4 of 8 sections are keyless); the rest show a
 
 ## What is the current task?
 
-As of the last session (2026-08-06), the active task was **DB-001: the documentation
-audit itself** — building/verifying all 17 handoff docs. That task is complete as of
-this file's writing (all 17 files exist and are internally consistent). If you're
-reading this and any of the 17 root `.md` files listed at the bottom of this section is
-missing or looks unfinished, DB-001 was interrupted — finish it first, sourcing every
-claim from the actual `daily-brief` code, not from any other project's docs.
+**DB-001** (the original 17-file documentation audit) and the **chat-feature migration**
+(off Anthropic, commit `173c9ac`) are both complete and committed — `git log` shows
+`173c9ac` as HEAD, working tree clean, up to date with `origin/main`. A 2026-08-07
+"final transfer checkpoint" pass then re-verified all 17 docs against the live repo and
+fixed several files that still described the pre-migration Anthropic-based chat
+implementation as current (see CHANGELOG.md's 2026-08-07 entry for the full list).
 
-If DB-001 is confirmed complete (all files present, `git status` shows only doc-file
-changes since the last real commit), the next task is **DB-002: rotate the credentials
-found live in `.env.example`/`.env.local` and replace that file's values with
-placeholders** — see TASKS.md for full detail, or DB-003 (make `CRON_SECRET`
-mandatory) if the user prioritizes that instead.
+There is no other in-progress task right now. The next task is whatever the maintainer
+prioritizes from TASKS.md's "Next up" list — most likely **DB-002: rotate the
+credentials still live in `.env.example`/`.env.local`** (GNews, FMP, Spotify, Upstash)
+and replace that file's values with placeholders, or **DB-003: make `CRON_SECRET`
+mandatory** if the user prioritizes that instead.
 
 ## What works right now?
 
@@ -50,9 +50,12 @@ obvious logic bugs). The real issues are **risks/gaps**, not bugs:
   (never committed to git, but should be rotated — see SECURITY.md).
 - `GET /api/cron` has no auth when `CRON_SECRET` is unset.
 - `THESPORTSDB_KEY` is dead config (sports actually uses ESPN).
-- The chat model ID (`claude-opus-4-8`) was never verified against a live Anthropic
-  call in this audit.
 - No tests, no CI, no rate limiting exist anywhere.
+
+Resolved since the original audit: the chat feature no longer uses Anthropic at all —
+commit `173c9ac` migrated it to a self-hosted OpenAI-compatible platform
+(`AI_PLATFORM_API_KEY`, model `"Yuu no Sekai"`), verified live with a real request. See
+DECISIONS.md D-016 and SESSION_LOG.md Session 2.
 
 ## What should I do next?
 
@@ -99,7 +102,7 @@ No automated test suite exists (see TESTING.md). After any code change: re-run t
 three commands above, then manually run `npm run dev` and walk through
 TESTING.md's "Manual smoke-test checklist" (home page loads, all 8 sections degrade
 gracefully without keys, Refresh Now works, chat widget responds if
-`ANTHROPIC_API_KEY` is set, `/archive` and `/archive/[date]` render correctly, and
+`AI_PLATFORM_API_KEY` is set, `/archive` and `/archive/[date]` render correctly, and
 `/api/cron`'s auth behavior matches what's documented in API_REFERENCE.md).
 
 ---
@@ -108,10 +111,15 @@ gracefully without keys, Refresh Now works, chat widget responds if
 
 ```
 Before making any change to this repo, read CLAUDE.md, PROJECT_STATE.md, TASKS.md,
-HANDOFF.md, and SESSION_LOG.md in full. Then run `git status` and `git log --oneline -10`
-to check the actual current branch, working-tree cleanliness, and recent commit history
-against what those docs claim — flag any contradiction you find between the docs and
-reality, or between the docs themselves, before doing anything else, and fix it.
+HANDOFF.md (this file, in full), and the tail of SESSION_LOG.md. Then run `git status`,
+`git log --oneline -10`, and `git fetch origin` (read-only) to check the actual current
+branch, working-tree cleanliness, commit history, and sync state against what those
+docs claim — flag any contradiction you find between the docs and reality, or between
+the docs themselves, before doing anything else, and fix it rather than adding a third,
+different answer. Docs in this repo have gone stale before (e.g. a chat-provider
+migration landed in commit 173c9ac while several docs still described the old Anthropic
+implementation until a 2026-08-07 checkpoint pass caught it) — don't assume any doc is
+current just because it looks thorough.
 
 Summarize your understanding of the current state of the project and the current task
 back to the user before you start editing anything.
@@ -125,13 +133,24 @@ Redis-with-in-memory-fallback store, the zero-auth single-user design, the per-s
 file layout in src/lib/sources/) unless you have a strong, explicitly-stated reason to
 change it — and if you do change it, update DECISIONS.md with the new decision and why.
 
+This repo is the template original for the "briefing" app family — anibrief,
+market-brief, and dramabrief (siblings under ~/Projects/) reuse this structural
+pattern. If you're actually working in one of those repos, treat this repo's docs as
+background context only, not as that repo's source of truth — read that repo's own
+17-file doc set first.
+
 Never read real values out of .env.local or .env.example into chat output, commit
 messages, or any file you write — reference variable names only. Treat any value you do
-see there as already-compromised, not as safe to reuse or display.
+see there as already-compromised, not as safe to reuse or display. As of this writing,
+.env.example still holds live-looking GNews/FMP/Spotify/Upstash values on disk
+(never committed to git) — TASKS.md DB-002 (rotate + replace with placeholders) is
+still open; don't fix it silently, it needs the maintainer's provider-dashboard access.
 
 After completing any meaningful piece of work, update PROJECT_STATE.md, TASKS.md,
-SESSION_LOG.md (append, don't overwrite prior entries), and DECISIONS.md if you made an
-architectural choice — keep them from drifting out of sync with the actual repo state.
+SESSION_LOG.md (append, don't overwrite prior entries), CHANGELOG.md, and DECISIONS.md
+if you made an architectural choice — keep them from drifting out of sync with the
+actual repo state, including the exact latest commit hash in PROJECT_STATE.md's "Git
+state" section (verify with `git log`, don't copy a number from another doc).
 
 Do not commit, push, deploy, or run destructive git operations unless the user
 explicitly asks you to.

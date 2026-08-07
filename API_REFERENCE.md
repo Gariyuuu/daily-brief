@@ -97,8 +97,8 @@ throughout.
 
 - **Source file**: `src/app/api/chat/route.ts`
 - **Purpose**: answer a user's question about a given day's digest (or general
-  knowledge) using the Anthropic Claude API.
-- **Auth/authz**: none (relies solely on `ANTHROPIC_API_KEY` being configured
+  knowledge) using a self-hosted OpenAI-compatible platform.
+- **Auth/authz**: none (relies solely on `AI_PLATFORM_API_KEY` being configured
   server-side; no per-request auth of the caller).
 - **Request body**:
   ```json
@@ -114,7 +114,7 @@ throughout.
   `date`: optional `YYYY-MM-DD`, defaults to `todayISO()`.
 - **Response (200)**: `{ "reply": "It's 72°F and partly cloudy in New York." }`
 - **Response (400)**: `{ "error": "messages is required" }` when `messages` is empty.
-- **Response (500)**: `{ "error": "ANTHROPIC_API_KEY is not configured on the server." }`
+- **Response (500)**: `{ "error": "AI_PLATFORM_API_KEY is not configured on the server." }`
   when the key is missing.
 - **Validation**: only checks `messages.length > 0`; no schema validation of message
   shape/roles beyond TypeScript's compile-time typing (no runtime library like Zod is
@@ -123,14 +123,17 @@ throughout.
   never writes.
 - **DB ops**: `getDigest(date)` (read-only) to build chat context; falls back to
   `"No digest has been generated yet for {date}."` context string if nothing is stored.
-- **External calls**: Anthropic Claude Messages API
-  (`client.messages.create(...)`), model ID `"claude-opus-4-8"` (hardcoded; validity
-  against Anthropic's current model catalog was **not verified** in this audit — see
-  CLAUDE.md's "Known issues" and TASKS.md DB-006), `max_tokens: 1024`, no streaming.
-- **Errors**: no top-level try/catch around the Anthropic call itself — a thrown SDK
+- **External calls**: self-hosted OpenAI-compatible platform via the `openai` SDK
+  `^7.4.0` (`client.chat.completions.create(...)`, `baseURL:
+  "https://api.gariyuuu.com/v1"`), model `"Yuu no Sekai"` (hardcoded), `max_tokens: 1024`,
+  plus a platform-specific `reasoning: { enabled: false }` param (cast via
+  `@ts-expect-error` since it isn't in the `openai` package's types) to suppress the
+  underlying Qwen3 model's verbose thinking mode. No streaming. Migrated off Anthropic's
+  Messages API in commit `173c9ac` (2026-08-06) — see DECISIONS.md D-016.
+- **Errors**: no top-level try/catch around the platform call itself — a thrown SDK
   error (invalid API key, invalid model ID, rate limit, etc.) is not explicitly caught
   in this route and would surface as an unhandled 500, not a friendly JSON error (the
   400/500 cases above are the only explicitly-handled error paths).
-- **Notes**: no rate limiting — each call costs real Anthropic API usage with no cap;
-  no conversation-length limit (`messages` sent to Anthropic exactly as received from
-  the client, full history each turn).
+- **Notes**: no rate limiting — each call costs real usage against the self-hosted
+  platform with no cap; no conversation-length limit (`messages` sent through exactly as
+  received from the client, full history each turn).

@@ -2,8 +2,8 @@
 
 A one-click personal briefing site: weather, US/world/politics news, sports scores,
 stock movers, new music releases, crypto, tech news, a daily quote, and an on-site
-Claude-powered chatbot to ask questions about any day's brief. Every past day is saved
-to an archive.
+AI chatbot (self-hosted OpenAI-compatible platform) to ask questions about any day's
+brief. Every past day is saved to an archive.
 
 The site works immediately with **zero API keys** for weather, crypto, tech news, and
 the quote/on-this-day section (all keyless public APIs). The remaining sections show a
@@ -27,7 +27,7 @@ Open http://localhost:3000. Weather/crypto/tech/quote sections work right away.
 | Stocks & Movers | Financial Modeling Prep | https://site.financialmodelingprep.com/developer/docs | Free tier |
 | Music Releases | Spotify Developer Dashboard | https://developer.spotify.com/dashboard → Create app | Free — use Client ID + Client Secret (Client Credentials flow, no user login) |
 | Sports (optional, higher limits) | TheSportsDB | https://www.thesportsdb.com/api.php | Free (shared key "3" works out of the box) |
-| Chatbot | Anthropic Console | https://console.anthropic.com/settings/keys | Pay-as-you-go, cheap for personal use |
+| Chatbot | Self-hosted platform (api.gariyuuu.com) | n/a — provisioned outside this repo | Self-hosted, no per-token Anthropic billing |
 | Archive persistence | Upstash | https://console.upstash.com → Create database → REST API tab | Free tier |
 
 Copy `.env.example` to `.env.local` and fill in whichever keys you have:
@@ -51,7 +51,7 @@ vercel env add GNEWS_API_KEY production
 vercel env add FMP_API_KEY production
 vercel env add SPOTIFY_CLIENT_ID production
 vercel env add SPOTIFY_CLIENT_SECRET production
-vercel env add ANTHROPIC_API_KEY production
+vercel env add AI_PLATFORM_API_KEY production
 vercel env add UPSTASH_REDIS_REST_URL production
 vercel env add UPSTASH_REDIS_REST_TOKEN production
 vercel env add CRON_SECRET production   # any random string, e.g. `openssl rand -hex 32`
@@ -73,10 +73,11 @@ vercel --prod            # redeploy so the new env vars take effect
 
 ## 5. The chatbot
 
-The floating 💬 button calls `/api/chat`, which sends Claude (`claude-opus-4-8`) a
-compact summary of the day's digest as context, plus your question. It works for
-questions about today's specific weather/news/scores, and falls back to Claude's
-general knowledge for anything else. Requires `ANTHROPIC_API_KEY`.
+The floating 💬 button calls `/api/chat`, which sends a self-hosted OpenAI-compatible
+model (`"Yuu no Sekai"`, via `https://api.gariyuuu.com/v1`) a compact summary of the
+day's digest as context, plus your question. It works for questions about today's
+specific weather/news/scores, and falls back to the model's general knowledge for
+anything else. Requires `AI_PLATFORM_API_KEY`.
 
 ## Ideas for later
 

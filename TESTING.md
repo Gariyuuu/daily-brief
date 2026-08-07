@@ -40,12 +40,12 @@ gaps are:
    data with no `.env.local` configured at all.
 4. Add each optional key to `.env.local` one at a time, restart `npm run dev`, and
    confirm the corresponding section (News, Markets, Music, and separately the chat
-   widget for `ANTHROPIC_API_KEY`) switches from its "connect your key" message to real
-   data.
+   widget for `AI_PLATFORM_API_KEY`) switches from its "connect your key" message to
+   real data.
 5. Click "🔄 Refresh Now" and confirm the "generated at" timestamp updates and the
    button shows "Refreshing…" while in flight.
 6. Open the chat widget (💬), ask a question about today's weather/news, and confirm a
-   reply comes back (requires `ANTHROPIC_API_KEY`).
+   reply comes back (requires `AI_PLATFORM_API_KEY`).
 7. Visit `/archive` — with no Upstash configured, confirm the amber persistence warning
    appears; after configuring Upstash and restarting, confirm past days start
    accumulating and are clickable through to `/archive/YYYY-MM-DD`.
@@ -58,7 +58,7 @@ gaps are:
 None exist. If tests are added later, avoid committing any fixture derived from real
 API responses that might embed a real key or personally-identifying data (unlikely
 given all sources return public data, but the chat context/summarization path touches
-whatever `ANTHROPIC_API_KEY`-backed responses look like — keep fixtures synthetic).
+whatever `AI_PLATFORM_API_KEY`-backed responses look like — keep fixtures synthetic).
 
 ## Commands
 
@@ -84,8 +84,8 @@ deploy:
 2. `npm run lint` clean.
 3. `npm run build` succeeds with no route errors.
 4. Manual smoke test (see checklist above) covering at least: home page loads, refresh
-   button works, chat widget responds (if `ANTHROPIC_API_KEY` configured), archive list
-   and one archived day render.
+   button works, chat widget responds (if `AI_PLATFORM_API_KEY` configured), archive
+   list and one archived day render.
 5. If any `src/lib/sources/*.ts` file was touched, manually verify both the success
    path (with the relevant key set) and the missing-key/fetch-failed fallback UI still
    render correctly.
@@ -100,7 +100,7 @@ deploy:
       "unavailable" message — never a crash or blank section.
 - [ ] "🔄 Refresh Now" updates the timestamp and doesn't error.
 - [ ] Chat widget opens, accepts input, and returns a reply (or a visible ⚠️ error, not
-      a silent failure) — requires `ANTHROPIC_API_KEY`.
+      a silent failure) — requires `AI_PLATFORM_API_KEY`.
 - [ ] `/archive` shows either the empty-state message or a list of dates, plus the
       persistence warning banner exactly when Upstash is unconfigured.
 - [ ] `/archive/YYYY-MM-DD` for a real archived date renders that day's digest;

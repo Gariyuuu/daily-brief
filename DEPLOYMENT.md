@@ -108,8 +108,8 @@ actual behavior, not an existing documented process):
    vars are actually set in production) unless in-memory-only archive is intentional.
 3. Manually trigger `GET /api/cron` once (with the correct `CRON_SECRET` header) or wait
    for the next scheduled run, then confirm `/archive` shows today's date.
-4. Open the chat widget and send one message to confirm `ANTHROPIC_API_KEY` is valid in
-   production.
+4. Open the chat widget and send one message to confirm `AI_PLATFORM_API_KEY` is valid
+   in production.
 5. Confirm the Vercel dashboard shows the Cron job registered for `/api/cron` at the
    expected schedule (Project → Cron Jobs).
 

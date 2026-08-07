@@ -1,5 +1,17 @@
 # ARCHITECTURE.md
 
+## Template lineage
+
+`daily-brief` is the **template original** for a family of sibling "briefing" apps —
+`anibrief`, `market-brief`, and `dramabrief` (all under `~/Projects/`) reuse this
+repo's structural pattern (Next.js App Router, `Section<T>` graceful-degradation
+sources, one file per external data source under `lib/sources/`, Redis-or-in-memory
+store, floating chat widget over a digest summary). If working on any sibling app,
+this file (and FILE_MAP.md/DECISIONS.md) is useful background for the shared pattern —
+but each sibling has its own domain, its own external APIs, and may have since diverged
+in its own stack choices (e.g. auth, DB provider); do not assume this repo's exact
+tech choices apply there without checking that repo's own docs first.
+
 ## System overview
 
 Daily Brief is a Next.js 16 App Router application with no traditional backend service —
@@ -40,7 +52,7 @@ flowchart TB
     end
 
     subgraph External["Other external services"]
-        Anthropic["Anthropic Claude API (ANTHROPIC_API_KEY)"]
+        AIPlatform["Self-hosted OpenAI-compatible platform\napi.gariyuuu.com/v1 (AI_PLATFORM_API_KEY)"]
         Upstash["Upstash Redis REST API"]
         VercelCron["Vercel Cron (vercel.json, daily 12:00 UTC)"]
     end
@@ -64,7 +76,7 @@ flowchart TB
     Store -- "hasUpstash ? redis.set/get : Map fallback" --> Upstash
 
     ChatAPI -- "getDigest() for context" --> Store
-    ChatAPI -- "messages.create()" --> Anthropic
+    ChatAPI -- "chat.completions.create()" --> AIPlatform
 ```
 
 ## Frontend / backend structure
@@ -87,7 +99,7 @@ The split that matters is **server vs. client components**:
 
 - `src/lib/sources/*.ts`, `src/lib/store.ts`, and all three `src/app/api/*/route.ts`
   files run **server-only** — they read secret env vars (`GNEWS_API_KEY`, `FMP_API_KEY`,
-  `ANTHROPIC_API_KEY`, `UPSTASH_REDIS_REST_TOKEN`, etc.) that must never reach the
+  `AI_PLATFORM_API_KEY`, `UPSTASH_REDIS_REST_TOKEN`, etc.) that must never reach the
   client bundle. None of these are imported from any `"use client"` file, and no
   `NEXT_PUBLIC_*` variable exists anywhere — there is currently no path for a secret to
   leak into client JS.
@@ -139,9 +151,10 @@ The split that matters is **server vs. client components**:
 2. `POST /api/chat` with `{ messages, date }`. The route loads that date's stored digest
    (`getDigest`), compresses it into a short plain-text summary
    (`summarizeDigest()` — top ~12 headlines, top 10 games, indices + top 5 gainers/losers,
-   etc., not the full JSON), and sends it as the Anthropic `system` prompt alongside the
+   etc., not the full JSON), and sends it as the `system`-role message (first entry in
+   the `messages` array) to the self-hosted OpenAI-compatible platform, alongside the
    conversation's `messages`.
-3. Returns `{ reply: <first text block> }`. No streaming.
+3. Returns `{ reply: response.choices[0].message.content }`. No streaming.
 
 ## Data flow
 
@@ -208,7 +221,7 @@ Two layers:
 1. **Source-level** (`src/lib/sources/*.ts`): every fetcher wraps its logic in
    try/catch and returns `fetchFailed(message)` or `missingKey(envVar, hint)` on
    failure — never throws.
-2. **Route-level**: `/api/chat` explicitly checks for a missing `ANTHROPIC_API_KEY`
+2. **Route-level**: `/api/chat` explicitly checks for a missing `AI_PLATFORM_API_KEY`
    and missing `messages` and returns typed JSON errors (500/400). `/api/digest` and
    `/api/cron` have no explicit try/catch around `buildDigest()`/`saveDigest()` — an
    unexpected throw there (e.g., Redis being unreachable) would surface as an
@@ -231,7 +244,7 @@ DEPLOYMENT.md.
 ## Security boundaries
 
 - Secrets (`GNEWS_API_KEY`, `FMP_API_KEY`, `SPOTIFY_CLIENT_ID/SECRET`,
-  `ANTHROPIC_API_KEY`, `UPSTASH_REDIS_REST_TOKEN`, `CRON_SECRET`) are read only in
+  `AI_PLATFORM_API_KEY`, `UPSTASH_REDIS_REST_TOKEN`, `CRON_SECRET`) are read only in
   server-only files and never referenced from any `"use client"` component — verified
   by grepping for their usage; none appear inside a `"use client"` file.
 - `.env.example`/`.env.local` are `.gitignore`d (`.env*`) and confirmed never committed.
@@ -243,7 +256,7 @@ DEPLOYMENT.md.
 1. **`/api/cron` is unauthenticated if `CRON_SECRET` is unset** — allows anyone to
    trigger paid/rate-limited API calls (FMP, GNews, Spotify) on demand.
 2. **No rate limiting anywhere** — `/api/digest` (POST) and `/api/chat` (which costs
-   real Anthropic API usage) can be hit as fast as a client wants.
+   real usage against the self-hosted platform) can be hit as fast as a client wants.
 3. **In-memory store fallback is silently lossy** — if Upstash env vars are ever
    accidentally unset in production, the archive silently stops persisting (a UI banner
    warns on `/archive`, but nothing alerts elsewhere, e.g. the home page).

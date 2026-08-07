@@ -188,16 +188,21 @@ external APIs was **not** exercised (no dev server was started, per audit constr
 
 - **Purpose**: ask an LLM questions about the current (or archived) day's digest, or
   general-knowledge questions.
-- **Status**: **Mostly complete** — fully wired end-to-end in code; **the specific
-  chat model ID could not be verified as valid** (see below), and no live call was made
-  in this audit.
+- **Status**: **Verified complete** — fully wired end-to-end in code and functionally
+  verified live (2026-08-06, Session 2: `npm run dev` + real `curl POST /api/chat`
+  returned HTTP 200 with a real reply from the self-hosted platform).
 - **Frontend**: `src/components/ChatWidget.tsx` (client, floating button + panel,
   mounted globally in `src/app/layout.tsx`). **Backend**: `POST /api/chat`
   (`src/app/api/chat/route.ts`).
-- **External integration**: Anthropic Claude API via `@anthropic-ai/sdk`
-  `^0.112.5`, model ID `"claude-opus-4-8"` (hardcoded, `src/app/api/chat/route.ts`).
+- **External integration**: self-hosted OpenAI-compatible platform via the `openai` SDK
+  `^7.4.0` (`baseURL: "https://api.gariyuuu.com/v1"`), model `"Yuu no Sekai"` (hardcoded,
+  `src/app/api/chat/route.ts`). Migrated off `@anthropic-ai/sdk`/Anthropic's API in
+  Session 2 (2026-08-06) to cut per-token cost — see CHANGELOG.md and SESSION_LOG.md.
+  `reasoning: { enabled: false }` is passed (via `@ts-expect-error`, a platform-specific
+  field not in the `openai` package's types) to keep the underlying Qwen3 model out of
+  its verbose thinking mode.
 - **DB dependency**: reads (does not write) the day's digest from `store.ts` for context.
-- **Env vars**: `ANTHROPIC_API_KEY` (server-only; route returns a 500 JSON error if
+- **Env vars**: `AI_PLATFORM_API_KEY` (server-only; route returns a 500 JSON error if
   absent, with no client-visible fallback UI beyond the error bubble).
 - **Validation**: route checks `messages.length === 0` → 400; does not validate message
   role/content shape beyond a TypeScript-level type (no runtime schema validation, e.g.
@@ -205,12 +210,13 @@ external APIs was **not** exercised (no dev server was started, per audit constr
 - **Error/loading/empty states**: loading = "Thinking…" bubble; error = an inline
   assistant-style bubble prefixed with ⚠️ showing the caught error message; empty state
   = a hint prompt shown before the first message.
-- **Permissions**: none — no rate limiting on a route that costs real Anthropic API
-  usage per call.
-- **Known issues**: (1) model ID unverified against Anthropic's current catalog — flag
-  for the next session to confirm; (2) no streaming (single request/response, listed as
-  a "for later" idea in `SETUP.md`); (3) no rate limiting; (4) no conversation length
-  cap (a long-running chat sends the full history every turn).
+- **Permissions**: none — no rate limiting on a route that costs real usage per call
+  against the self-hosted platform.
+- **Known issues**: (1) no streaming (single request/response, listed as a "for later"
+  idea in `SETUP.md`); (2) no rate limiting; (3) no conversation length cap (a
+  long-running chat sends the full history every turn); (4) no top-level try/catch
+  around the `openai` client call itself — a thrown SDK error would surface as an
+  unhandled 500, not a friendly JSON error (see API_REFERENCE.md).
 
 ## Cross-cutting: graceful degradation pattern
 

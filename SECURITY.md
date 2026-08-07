@@ -20,17 +20,22 @@ var. If it is unset, the check is skipped entirely and the route is fully open.
 ## Secret handling
 
 - Secrets read: `GNEWS_API_KEY`, `FMP_API_KEY`, `SPOTIFY_CLIENT_ID`,
-  `SPOTIFY_CLIENT_SECRET`, `THESPORTSDB_KEY` (declared but unused), `ANTHROPIC_API_KEY`,
+  `SPOTIFY_CLIENT_SECRET`, `THESPORTSDB_KEY` (declared but unused), `AI_PLATFORM_API_KEY`
+  (formerly `ANTHROPIC_API_KEY` — chat migrated off Anthropic's API to a self-hosted
+  OpenAI-compatible platform in commit `173c9ac`, see DECISIONS.md D-016),
   `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `CRON_SECRET`. All are read only
   via `process.env.*` inside server-only files (`src/lib/sources/*.ts`,
   `src/lib/store.ts`, `src/app/api/*/route.ts`) — grep confirmed none are referenced
   from any `"use client"` file, and no `NEXT_PUBLIC_*` variable exists anywhere.
-- **Finding (High)**: `.env.example` on disk (repo root) currently contains what appear
-  to be **live, working credential values** — including a full-format
-  `sk-ant-api03-...` string in the `ANTHROPIC_API_KEY` slot, plus GNews, FMP, Spotify,
-  and Upstash values — instead of placeholders. `.env.example` is meant to be a
-  documentation template, typically safe to commit; this instance is not safe to commit
-  in its current state.
+- **Finding (High), re-confirmed 2026-08-07**: `.env.example` on disk (repo root)
+  currently contains what appear to be **live, working credential values** — real-looking
+  GNews, FMP, Spotify client ID/secret, and Upstash REST URL/token strings — instead of
+  placeholders. `AI_PLATFORM_API_KEY` in this file already holds only a placeholder
+  (`"your_ai_platform_api_key"`), and the former Anthropic key line is gone entirely — so
+  this finding now applies to four vars (GNews, FMP, Spotify, Upstash), not five.
+  `.env.example` is meant to be a documentation template, typically safe to commit; this
+  instance is not safe to commit in its current state. Still unresolved as of this
+  checkpoint pass — see TASKS.md DB-002.
   - **Mitigating factor**: `.gitignore` includes a blanket `.env*` rule, and
     `git log --all --full-history -- .env.local` plus `git ls-files | grep -i env`
     both confirm neither `.env.example` nor `.env.local` has ever been committed to this
@@ -89,7 +94,8 @@ route can be called as fast as a client's network allows:
 - `POST /api/digest` — each call fans out to 8 external APIs, several of which have
   hard daily quotas (GNews 100 req/day, FMP free-tier daily cap, Spotify's own
   rate limits).
-- `POST /api/chat` — each call is a real, billed Anthropic API request with no cap.
+- `POST /api/chat` — each call is a real, billed request against the self-hosted
+  OpenAI-compatible platform with no cap.
 - `GET /api/cron` — when `CRON_SECRET` is unset, this is the most severe combination:
   a fully public endpoint that triggers the same expensive fan-out as Refresh Now.
 
@@ -114,10 +120,11 @@ of who/what triggered `/api/cron` when unauthenticated).
 
 ## Dependency concerns
 
-- `@anthropic-ai/sdk` `^0.112.5`, `@upstash/redis` `^1.38.0`, `next` `16.2.11`, `react`/
-  `react-dom` `19.2.4` — all reasonably current at time of audit; no independent CVE
-  scan was performed (out of scope for this task — would require `npm audit` or similar
-  against live vulnerability databases, not attempted here).
+- `openai` `^7.4.0` (replaced `@anthropic-ai/sdk` `^0.112.5` in commit `173c9ac`),
+  `@upstash/redis` `^1.38.0`, `next` `16.2.11`, `react`/`react-dom` `19.2.4` — all
+  reasonably current at time of this checkpoint; no independent CVE scan was performed
+  (out of scope for this task — would require `npm audit` or similar against live
+  vulnerability databases, not attempted here).
 - `next` `16.2.11` is a notably new/major version relative to this agent's training
   data — see `AGENTS.md`'s explicit warning that APIs/conventions may differ; this is a
   process risk (future AI-assisted changes could use outdated patterns) more than a

@@ -16,8 +16,8 @@ limited provider is unavoidable
 crypto, tech news, and the quote/on-this-day section (all keyless public APIs)." Weather
 (Open-Meteo), crypto (CoinGecko), tech (Hacker News), and extra (ZenQuotes + Wikipedia)
 were all deliberately chosen for being free and keyless; news (GNews), stocks (FMP),
-music (Spotify), and chat (Anthropic) require keys because no equivalent free-keyless
-option covers that data.
+music (Spotify), and chat (self-hosted OpenAI-compatible platform, `AI_PLATFORM_API_KEY`
+— see D-016) require keys because no equivalent free-keyless option covers that data.
 
 ## D-003 — ESPN's unofficial scoreboard API chosen for sports over TheSportsDB
 **Inferred.** `src/lib/sources/sports.ts` comment: "it's the exact same data espn.com
@@ -106,3 +106,22 @@ on every turn."
 comment anywhere explains this as a deliberate choice; most likely explanation
 (inferred): this is an early-stage personal project where manual verification via
 `npm run dev` was sufficient so far, not a considered rejection of testing.
+
+## D-016 — Chat migrated from direct Anthropic API to a self-hosted OpenAI-compatible
+platform
+**Verified.** Commit `173c9ac` ("Switch chat feature from Anthropic to self-hosted
+goat-ai-platform") and SESSION_LOG.md's Session 2 entry: `src/app/api/chat/route.ts`
+was changed from `@anthropic-ai/sdk`'s `messages.create()` (model `"claude-opus-4-8"`)
+to the `openai` SDK's `chat.completions.create()` against `https://api.gariyuuu.com/v1`
+(model `"Yuu no Sekai"`), explicitly "to stop paying for direct Anthropic API access."
+The env var was renamed `ANTHROPIC_API_KEY` → `AI_PLATFORM_API_KEY`. Verified live via a
+real `npm run dev` + `curl POST /api/chat` request (HTTP 200, real reply). Every other
+digest section/source, the Redis store, and the cron route were explicitly untouched by
+this change (see CLAUDE.md's "DO NOT CHANGE WITHOUT REVIEW" list).
+
+## Template lineage
+`daily-brief` is the template original for the "briefing" app family — `anibrief`,
+`market-brief`, and `dramabrief` (siblings under `~/Projects/`) structurally reuse this
+repo's `Section<T>`/graceful-degradation pattern, per-source file layout, and
+Redis-or-in-memory store design (see ARCHITECTURE.md's "Template lineage" section for
+detail and caveats).
