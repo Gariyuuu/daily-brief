@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { getDigest } from "@/lib/store";
 import { Digest } from "@/lib/types";
 import { todayISO } from "@/lib/utils/dates";
@@ -55,10 +55,10 @@ function summarizeDigest(digest: Digest): string {
 }
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.AI_PLATFORM_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY is not configured on the server." },
+      { error: "AI_PLATFORM_API_KEY is not configured on the server." },
       { status: 500 }
     );
   }
@@ -76,21 +76,28 @@ export async function POST(req: NextRequest) {
     ? summarizeDigest(digest)
     : `No digest has been generated yet for ${date}.`;
 
-  const client = new Anthropic({ apiKey });
+  const client = new OpenAI({ apiKey, baseURL: "https://api.gariyuuu.com/v1" });
 
-  const response = await client.messages.create({
-    model: "claude-opus-4-8",
-    max_tokens: 1024,
-    system:
+  const systemMessage = {
+    role: "system" as const,
+    content:
       "You are the assistant embedded in Daily Brief, a personal daily-information dashboard. " +
       "Answer the user's questions about today's (or the requested day's) news, weather, sports, " +
       "stocks, music, and crypto using the digest context below. You may also use your general " +
       "knowledge for anything the digest doesn't cover. Keep answers concise and conversational.\n\n" +
       context,
-    messages: messages.map((m) => ({ role: m.role, content: m.content })),
+  };
+
+  const response = await client.chat.completions.create({
+    model: "Yuu no Sekai",
+    max_tokens: 1024,
+    messages: [systemMessage, ...messages.map((m) => ({ role: m.role, content: m.content }))],
+    // The underlying model (Qwen3) defaults to a verbose internal "thinking mode" that
+    // burns ~10x more output tokens per response unless explicitly disabled. Not in the
+    // official openai SDK's types (it's a platform-specific extension), so cast the params.
+    // @ts-expect-error -- `reasoning` is a platform-specific extension not in the openai SDK's types
+    reasoning: { enabled: false },
   });
 
-  const textBlock = response.content.find((b): b is Anthropic.TextBlock => b.type === "text");
-
-  return NextResponse.json({ reply: textBlock?.text ?? "" });
+  return NextResponse.json({ reply: response.choices[0]?.message?.content ?? "" });
 }

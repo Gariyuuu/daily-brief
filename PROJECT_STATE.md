@@ -6,6 +6,16 @@
 session to produce this doc set). All facts below were verified against the repo at
 this timestamp; no code was changed.
 
+**Update (2026-08-06, Session 2)**: the chat feature (`src/app/api/chat/route.ts`) was
+migrated off `@anthropic-ai/sdk` to the `openai` SDK against a self-hosted
+OpenAI-compatible platform (`https://api.gariyuuu.com/v1`, model `"Yuu no Sekai"`), so
+the user stops paying for direct Anthropic API access. `ANTHROPIC_API_KEY` is now
+`AI_PLATFORM_API_KEY`. `npx tsc --noEmit`, `npm run lint`, and `npm run build` all pass
+clean, and the endpoint was functionally verified via a real `npm run dev` + `curl`
+request (HTTP 200, real reply). See SESSION_LOG.md Session 2 for full detail. The rest
+of this file (below) describes the state as of the original documentation audit and is
+otherwise still accurate — only the chat/LLM facts changed.
+
 ## Git state
 
 - **Branch**: `main` (only branch; `git branch -a` shows no other local or remote
@@ -79,16 +89,19 @@ What has been attempted / completed so far:
 
 ## What fails / is unverified
 
-- **No end-to-end runtime verification was performed** — this audit did not start the
-  dev server, did not hit any live external API, and did not exercise `/api/chat`,
-  `/api/digest`, or `/api/cron` against real data, per the task's "no long-running dev
-  server, no real database" constraint. Whether the chat model ID
-  (`claude-opus-4-8` in `src/app/api/chat/route.ts`) is currently valid on the Anthropic
-  API is **unverified**.
+- **No end-to-end runtime verification was performed in the original audit** — it did
+  not start the dev server, did not hit any live external API, and did not exercise
+  `/api/chat`, `/api/digest`, or `/api/cron` against real data. **This is now resolved
+  for `/api/chat` specifically**: Session 2 (2026-08-06) migrated chat off Anthropic to
+  a self-hosted OpenAI-compatible platform (model `"Yuu no Sekai"`) and verified it
+  end-to-end with a real `npm run dev` + `curl` call (HTTP 200, real reply) — see
+  SESSION_LOG.md. `/api/digest` and `/api/cron` remain unverified against real data.
 - Whether the Vercel deployment is currently live, and whether production env vars
-  (especially `CRON_SECRET`, `UPSTASH_REDIS_REST_URL/TOKEN`, `ANTHROPIC_API_KEY`) are
+  (especially `CRON_SECRET`, `UPSTASH_REDIS_REST_URL/TOKEN`, `AI_PLATFORM_API_KEY`) are
   actually set there, is **unverified** — would require Vercel dashboard/CLI access
-  outside this task's scope.
+  outside this task's scope. Note: production still has the old `ANTHROPIC_API_KEY` var
+  name set (if it was ever configured there) — it must be renamed to
+  `AI_PLATFORM_API_KEY` in Vercel's project settings for chat to work in production.
 - Whether the daily Vercel Cron job (`vercel.json`, `0 12 * * *`) is actually registered
   and firing in production is **unverified**.
 

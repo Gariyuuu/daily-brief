@@ -17,7 +17,7 @@ CLAUDE.md contained only the `@AGENTS.md` import and no project documentation.
 aggregates weather, US/world/politics news, sports scores, stock movers, new music
 releases, crypto prices, tech news (Hacker News), a daily quote, and a Wikipedia
 "on this day" section into one digest per calendar day. Every digest is archived by
-date. A floating chat widget lets the user ask an Anthropic Claude model questions
+date. A floating chat widget lets the user ask a self-hosted, OpenAI-compatible model questions
 about the current (or an archived) day's digest.
 
 It is explicitly designed to work with **zero configured API keys** — weather, crypto,
@@ -52,7 +52,9 @@ assume newer or older versions without re-checking.
 - **Styling**: Tailwind CSS `^4` via `@tailwindcss/postcss` (no `tailwind.config` file —
   Tailwind v4's CSS-first config lives in `src/app/globals.css`)
 - **Fonts**: `next/font/google` — Geist Sans + Geist Mono (`src/app/layout.tsx`)
-- **LLM SDK**: `@anthropic-ai/sdk` `^0.112.5` (used only in `src/app/api/chat/route.ts`)
+- **LLM SDK**: `openai` `^7.4.0` (OpenAI-compatible client, used only in
+  `src/app/api/chat/route.ts` — points at a self-hosted platform at
+  `https://api.gariyuuu.com/v1`, model `"Yuu no Sekai"`, not OpenAI's own API)
 - **KV store**: `@upstash/redis` `^1.38.0` (used only in `src/lib/store.ts`)
 - **Date utils**: `date-fns` `^4.4.0` (declared in `package.json`; not actually imported
   anywhere in `src/` at time of audit — all date logic in `src/lib/utils/dates.ts` uses
@@ -94,7 +96,7 @@ daily-brief/
 │   │   └── api/
 │   │       ├── digest/route.ts     # GET (read/rebuild-if-stale) + POST (force refresh)
 │   │       ├── cron/route.ts       # GET, Vercel-Cron-triggered daily rebuild
-│   │       └── chat/route.ts       # POST, Anthropic-backed Q&A over the digest
+│   │       └── chat/route.ts       # POST, self-hosted-LLM-backed Q&A over the digest
 │   ├── components/                 # one presentational component per digest section
 │   │   ├── SectionCard.tsx         # shared card chrome + <Unavailable/> fallback UI
 │   │   ├── DigestView.tsx          # lays out all section components in a grid
@@ -194,7 +196,7 @@ rather than placeholders.
 | `SPOTIFY_CLIENT_ID` | Spotify Client Credentials flow (New Music section) | Optional (both ID and secret required together) | Server only | opaque string | `your_spotify_client_id` |
 | `SPOTIFY_CLIENT_SECRET` | Spotify Client Credentials flow | Optional | Server only | opaque string | `your_spotify_client_secret` |
 | `THESPORTSDB_KEY` | Declared in `.env.example`/SETUP.md but **not read anywhere in `src/`** — sports actually uses ESPN's keyless public API (`src/lib/sources/sports.ts`). Dead/stale config. | N/A — unused | — | — | leave unset |
-| `ANTHROPIC_API_KEY` | Powers the chat widget (`POST /api/chat`) | Optional — chat returns a 500 JSON error without it | Server only | `sk-ant-...` | `sk-ant-api03-placeholder` |
+| `AI_PLATFORM_API_KEY` | Powers the chat widget (`POST /api/chat`) — self-hosted OpenAI-compatible platform at `https://api.gariyuuu.com/v1`, model `"Yuu no Sekai"` | Optional — chat returns a 500 JSON error without it | Server only | opaque string | `your_ai_platform_api_key` |
 | `UPSTASH_REDIS_REST_URL` | Redis REST endpoint for persistent archive | Optional — falls back to in-memory (non-persistent) store | Server only | HTTPS URL | `https://example.upstash.io` |
 | `UPSTASH_REDIS_REST_TOKEN` | Redis REST auth token | Optional (required together with the URL above) | Server only | opaque string | `your_upstash_token` |
 | `CRON_SECRET` | Bearer-token check on `GET /api/cron` | Optional but strongly recommended in production — **if unset, `/api/cron` has no auth check at all** | Server only | any random string | `openssl rand -hex 32` output |
@@ -221,7 +223,8 @@ SECURITY.md.
 
 Three internal API routes (`/api/digest`, `/api/cron`, `/api/chat`) and eight outbound
 external integrations (Open-Meteo, GNews, ESPN, Financial Modeling Prep, Spotify,
-CoinGecko, Hacker News/Firebase, ZenQuotes + Wikipedia), plus Anthropic Claude for chat
+CoinGecko, Hacker News/Firebase, ZenQuotes + Wikipedia), plus a self-hosted
+OpenAI-compatible platform (`https://api.gariyuuu.com/v1`) for chat
 and Upstash Redis for storage. Full request/response shapes are in API_REFERENCE.md;
 per-source detail is in FEATURES.md.
 
@@ -268,14 +271,15 @@ Vercel dashboard/CLI access outside this task's scope). See DEPLOYMENT.md.
 ## Known issues
 
 1. **`.env.example` contains live-looking secret values instead of placeholders**
-   (GNews, FMP, Spotify client ID/secret, and what appears to be a real
-   `sk-ant-api03-...` Anthropic key, plus real Upstash REST URL/token). The file is
+   (GNews, FMP, Spotify client ID/secret, and real Upstash REST URL/token). The file is
    correctly excluded from git by `.gitignore`'s `.env*` rule and `git ls-files` /
    `git log --all -- .env.local` confirm neither `.env.example` nor `.env.local` has
    ever been committed — so nothing has leaked to git history. But the values on disk
    should be treated as compromised/should-be-rotated, and the file should hold
    placeholders, not real keys, going forward. **No document in this audit reproduces
-   these real values.**
+   these real values.** (The former Anthropic key line has since been replaced with an
+   `AI_PLATFORM_API_KEY` placeholder — see item 5 below — but the other four vars are
+   still real values and still need rotation per DB-002.)
 2. **`GET /api/cron` has no authentication if `CRON_SECRET` is unset.** Anyone who
    knows the URL can trigger a full digest rebuild (burning GNews/FMP/Spotify free-tier
    quota) with no rate limiting anywhere in the app.
@@ -285,12 +289,15 @@ Vercel dashboard/CLI access outside this task's scope). See DEPLOYMENT.md.
    written, or the env var was added speculatively and never wired up.
 4. **`date-fns` is an unused dependency** — declared in `package.json` but no import of
    it exists anywhere in `src/`. Not urgent, just dead weight.
-5. **Chat model ID `claude-opus-4-8`** (`src/app/api/chat/route.ts` line ~82) does not
-   match a model ID format recognizable from this agent's training data as of its
-   knowledge cutoff (Jan 2026). Given the app's own git history postdates that cutoff,
-   this may simply be a newer real model — **verify against Anthropic's current model
-   list before assuming it's a typo**, and confirm chat actually works end-to-end
-   (unverified in this audit — no `ANTHROPIC_API_KEY` value was invoked/tested).
+5. **RESOLVED (2026-08-06):** Chat no longer calls Anthropic at all. `POST /api/chat`
+   now uses the `openai` SDK against a self-hosted OpenAI-compatible platform at
+   `https://api.gariyuuu.com/v1` with model `"Yuu no Sekai"`, so the user stops paying
+   for direct Anthropic API access. `reasoning: { enabled: false }` is passed on every
+   request (via a `@ts-expect-error`-annotated field not in the `openai` package's
+   types) to keep the underlying model out of its verbose thinking mode. Verified
+   end-to-end with a real `npm run dev` + `curl POST /api/chat` call — returned a 200
+   with a real reply. See `AI_PLATFORM_API_KEY` in the env var table above (was
+   `ANTHROPIC_API_KEY`).
 6. **Archive is not persistent unless Upstash env vars are set.** Without them, the
    `/archive` page will visibly warn the user (`src/app/archive/page.tsx`) and all
    history is lost on every cold start — expected/documented behavior, not a bug, but

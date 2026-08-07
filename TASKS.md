@@ -36,14 +36,19 @@ acceptance criteria, validation steps, blockers, and notes.
 
 - **DB-002 — Rotate credentials found live in `.env.example`/`.env.local`.**
   Priority: **High** (security). Files: `.env.example`, `.env.local` (neither tracked
-  by git). Dependencies: none. Acceptance criteria: every key in `.env.example` is
-  regenerated at its provider and the file holds only obvious placeholders (e.g.
-  `your_gnews_api_key`), never real values. Validation: confirm the app still runs with
-  `npm run dev` after updating `.env.local` with the new real values (kept out of
-  `.env.example`). Blockers: requires access to each provider's dashboard (GNews, FMP,
-  Spotify, Anthropic Console, Upstash Console) — outside this audit's scope. Notes:
-  this audit found the values but did not read/reproduce them anywhere; see
-  SECURITY.md.
+  by git). Dependencies: none. Acceptance criteria: every remaining real key
+  (GNews, FMP, Spotify, Upstash) is regenerated at its provider and `.env.example`
+  holds only obvious placeholders (e.g. `your_gnews_api_key`), never real values.
+  Validation: confirm the app still runs with `npm run dev` after updating
+  `.env.local` with the new real values (kept out of `.env.example`). Blockers:
+  requires access to each provider's dashboard (GNews, FMP, Spotify, Upstash Console)
+  — outside this audit's scope. Notes: the Anthropic key that used to be part of this
+  list is no longer relevant to this app's `.env.example`/`.env.local` — chat was
+  migrated off Anthropic entirely in Session 2 (see DB-006, SESSION_LOG.md), and both
+  files now hold `AI_PLATFORM_API_KEY` instead. The maintainer may still want to revoke
+  the old Anthropic key at Anthropic's console since this app no longer uses it, but
+  that's outside this repo's scope to action. This audit found the other four values
+  but did not read/reproduce them anywhere; see SECURITY.md.
 - **DB-003 — Make `CRON_SECRET` mandatory (reject, don't skip, when unset).**
   Priority: Medium-High. Files: `src/app/api/cron/route.ts`. Dependencies: DB-002 should
   land first so a real `CRON_SECRET` exists in production before tightening the check.
@@ -64,16 +69,17 @@ acceptance criteria, validation steps, blockers, and notes.
   Files: `package.json`. Acceptance criteria: either removed from `package.json` +
   `npm install` re-run, or a genuine usage is added. Validation: `npm run build`.
   Blockers: none.
-- **DB-006 — Verify the Anthropic chat model ID (`claude-opus-4-8`).** Priority: Medium.
-  Files: `src/app/api/chat/route.ts`. Acceptance criteria: confirmed against Anthropic's
-  current model catalog to be a real, available model; chat tested end-to-end with a
-  real `ANTHROPIC_API_KEY`. Validation: manual chat test via `npm run dev`. Blockers:
-  requires a valid `ANTHROPIC_API_KEY` and willingness to make a real (billed) API call.
+- **DB-006 — SUPERSEDED/RESOLVED (2026-08-06).** Originally: verify the Anthropic chat
+  model ID (`claude-opus-4-8`). This is moot — `src/app/api/chat/route.ts` no longer
+  calls Anthropic at all. It now uses the `openai` SDK against a self-hosted
+  OpenAI-compatible platform (`https://api.gariyuuu.com/v1`, model `"Yuu no Sekai"`),
+  and was tested end-to-end with a real `npm run dev` + `curl` call (HTTP 200, real
+  reply). See SESSION_LOG.md Session 2 and CLAUDE.md's "Known issues" item 5.
 
 ## Blocked
 
 None currently blocked on external dependencies besides the provider-dashboard access
-needed for DB-002 and the live-API-call needed for DB-006.
+needed for DB-002. DB-006 is resolved (no longer blocked — see above).
 
 ## High priority
 
@@ -82,7 +88,7 @@ needed for DB-002 and the live-API-call needed for DB-006.
 
 ## Medium priority
 
-- DB-006 (verify chat model ID)
+None currently (DB-006 resolved).
 
 ## Low priority
 
@@ -113,8 +119,9 @@ runtime bugs, since no live traffic was exercised in this audit.
   work, consider whether adding even minimal tests around `src/lib/sources/*.ts`'s
   error-handling paths (mock fetch failures) and `src/lib/aggregate.ts`'s `isStale()`
   logic would be worthwhile — currently 100% manually verified.
-- Manual smoke test of `/api/chat` against a real `ANTHROPIC_API_KEY` (never performed
-  in this audit).
+- Manual smoke test of `/api/chat` against a real `AI_PLATFORM_API_KEY` — **done in
+  Session 2** (2026-08-06): `npm run dev` + `curl POST /api/chat` returned HTTP 200 with
+  a real reply. Not performed in the original DB-001 audit.
 - Manual smoke test of the full cron flow (`GET /api/cron` with/without a correct
   `CRON_SECRET` header) against a running dev server.
 
@@ -127,6 +134,9 @@ resolved state instead of leaving them listed as open gaps.
 ## Recently completed
 
 - DB-001 (this audit) — documentation build, in progress/nearing completion.
+- DB-006 (2026-08-06, Session 2) — chat migrated off Anthropic to a self-hosted
+  OpenAI-compatible platform (`openai` SDK, `https://api.gariyuuu.com/v1`, model
+  `"Yuu no Sekai"`); verified end-to-end with a real request. See SESSION_LOG.md.
 
 ## Deferred
 
