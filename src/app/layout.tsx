@@ -14,9 +14,29 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://daily-brief-lovat.vercel.app";
+const description =
+  "A one-click daily briefing combining weather, news, sports, stocks, crypto, and tech updates into a single archived digest, refreshed every day.";
+
 export const metadata: Metadata = {
-  title: "Daily Brief",
-  description: "Your one-click daily briefing: weather, news, sports, markets, and more.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Daily Brief — Weather, News & Markets Digest",
+    template: "%s · Daily Brief",
+  },
+  description,
+  openGraph: {
+    type: "website",
+    url: siteUrl,
+    siteName: "Daily Brief",
+    title: "Daily Brief — Weather, News & Markets Digest",
+    description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Daily Brief — Weather, News & Markets Digest",
+    description,
+  },
 };
 
 export default function RootLayout({
