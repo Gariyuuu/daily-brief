@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { ThinkingOrb } from "thinking-orbs";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -98,7 +99,8 @@ export default function ChatWidget() {
           </div>
         ))}
         {loading && (
-          <div className="mr-auto max-w-[85%] rounded-2xl rounded-bl-sm bg-black/5 dark:bg-white/10 px-3 py-2 text-sm text-black/50 dark:text-white/50">
+          <div className="mr-auto flex items-center gap-2 max-w-[85%] rounded-2xl rounded-bl-sm bg-black/5 dark:bg-white/10 px-3 py-2 text-sm text-black/50 dark:text-white/50">
+            <ThinkingOrb state="composing" size={20} aria-label="Thinking" />
             Thinking…
           </div>
         )}
