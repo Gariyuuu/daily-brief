@@ -56,14 +56,14 @@ non-background/foreground colors.
 - **Fonts**: Geist Sans (`--font-geist-sans`) for body text, Geist Mono
   (`--font-geist-mono`) available but not visibly used outside the font variable
   definition (`src/app/layout.tsx`); loaded via `next/font/google`.
-- **Body font stack fallback**: `Arial, Helvetica, sans-serif` (`globals.css`), applied
+- **Body font stack fallback**: `Arial, Helvetica, sans-serif` (`src/app/globals.css`), applied
   underneath the Geist variable-based Tailwind font config.
 - **Accent colors**: emerald (`text-emerald-600`/`emerald-400`) for positive price
   changes, red (`text-red-600`/`red-400`) for negative changes and live-game
   indicators, amber (`text-amber-700`/`amber-400`) for the archive persistence warning
   — all standard Tailwind palette shades, no custom color tokens defined.
   No dedicated design-token file exists (no `tailwind.config.ts` with custom
-  colors — Tailwind v4 uses the CSS-first `@theme` block in `globals.css`, which only
+  colors — Tailwind v4 uses the CSS-first `@theme` block in `src/app/globals.css`, which only
   defines `background`/`foreground`/font variables, nothing else).
 - **Spacing/radii**: consistently `rounded-2xl` for cards, `rounded-full` for buttons
   and pills, `rounded-lg` for smaller inline elements (thumbnails, mover pills);
@@ -83,10 +83,13 @@ non-background/foreground colors.
 
 ## Animation
 
-Minimal: `transition` + `hover:opacity-90` on buttons (`RefreshButton`,
+Mostly minimal: `transition` + `hover:opacity-90` on buttons (`RefreshButton`,
 `ChatWidget`'s send button and toggle bubble), `group-hover:underline` on article/
-release links. No page-transition animation, no skeleton loaders, no spinner components
-— loading states are text-only ("Refreshing…", "Thinking…").
+release links. No page-transition animation, no skeleton loaders. **Correction
+(2026-08-17):** one animated component now exists — `src/components/ChatWidget.tsx`'s "Thinking…"
+loading bubble gained a `<ThinkingOrb>` (from the `thinking-orbs` `^0.3.1` package,
+added commit `9b0e424`, 2026-08-15) alongside the text. Every other loading state is
+still text-only ("Refreshing…").
 
 ## Icons
 
@@ -111,7 +114,8 @@ or page). They appear to be scaffold leftovers, not actively used assets.
 - **Forms**: one — `<ChatWidget>`'s message input (`<form onSubmit>`), a single text
   input + submit button, no client-side validation beyond `text.trim()` non-empty check.
 - **Loading states**: `<RefreshButton>` swaps its label to "Refreshing…" and disables
-  itself; `<ChatWidget>` shows a "Thinking…" bubble while awaiting a reply. No loading
+  itself; `<ChatWidget>` shows a "Thinking…" bubble with an animated `<ThinkingOrb>`
+  while awaiting a reply (see "Animation" above). No loading
   state exists for the initial page load itself (server-rendered, so the whole page
   simply doesn't respond until the digest is ready — no `loading.tsx` file found in
   `src/app/`).
@@ -128,7 +132,7 @@ or page). They appear to be scaffold leftovers, not actively used assets.
   `<SectionCard>` icon spans use `aria-hidden` (decorative emoji correctly hidden from
   screen readers).
 - Article/release thumbnail `<img>` tags use empty `alt=""` (decorative) in
-  `NewsList.tsx` and `CryptoTicker.tsx`; `MusicReleases.tsx` uses `alt={r.title}`
+  `src/components/NewsList.tsx` and `src/components/CryptoTicker.tsx`; `src/components/MusicReleases.tsx` uses `alt={r.title}`
   (informative) — inconsistent but each choice is individually reasonable given context.
 - No explicit focus-trap/keyboard-navigation handling in `<ChatWidget>`'s panel beyond
   what native `<input>`/`<button>`/`<form>` elements provide for free.

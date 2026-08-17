@@ -119,6 +119,22 @@ real `npm run dev` + `curl POST /api/chat` request (HTTP 200, real reply). Every
 digest section/source, the Redis store, and the cron route were explicitly untouched by
 this change (see CLAUDE.md's "DO NOT CHANGE WITHOUT REVIEW" list).
 
+## D-017 — Third-party `thinking-orbs` package for the chat loading indicator, not a
+hand-built spinner
+**Inferred.** Commit `9b0e424` ("feat(chat): add animated thinking indicator to chat
+widget") added the `thinking-orbs` `^0.3.1` dependency and used its `<ThinkingOrb>`
+component in `src/components/ChatWidget.tsx`, rather than building a custom CSS/SVG spinner in-house
+(this app has zero other icon/animation libraries — see UI_SYSTEM.md's "Icons"
+section). No comment explains the choice; reasonable inference: a small, purpose-built
+component was faster to drop in than hand-rolling animation for one loading state.
+
+## D-018 — Standard Next.js `next/og` for Open Graph images, not a static asset
+**Verified** (from the code shape, not a comment). `src/app/opengraph-image.tsx` and
+`src/app/archive/[date]/opengraph-image.tsx` (both added commit `7240b1c`) use
+`next/og`'s `ImageResponse` to generate OG images at request time from JSX, rather than
+shipping a static PNG. This lets the per-date archive OG image exist without needing a
+generated-image pipeline — one React component covers every date.
+
 ## Template lineage
 `daily-brief` is the template original for the "briefing" app family — `anibrief`,
 `market-brief`, and `dramabrief` (siblings under `~/Projects/`) structurally reuse this

@@ -11,6 +11,18 @@ This file was rebuilt from a full repository audit on 2026-08-06. Every claim be
 checked against the actual code, config, and git history at that time. The previous
 CLAUDE.md contained only the `@AGENTS.md` import and no project documentation.
 
+**Update (2026-08-17, onboard sync)**: three real code commits landed after the
+2026-08-07 checkpoint pass (`7240b1c`/`e47a545` — SEO metadata, Open Graph images,
+`src/app/robots.ts`, `src/app/sitemap.ts`; `9b0e424`/`37f84ef` — animated `thinking-orbs` "Thinking…"
+indicator in `src/components/ChatWidget.tsx`) without a doc update. This pass re-verified the whole
+repo against current `main` (`37f84ef`, tree clean) and corrected every section below
+that had drifted — most importantly, the "no `NEXT_PUBLIC_*` variables" claim is now
+**false**: `NEXT_PUBLIC_SITE_URL` was added. The production URL
+(`https://daily-brief-lovat.vercel.app`, the default baked into the new SEO files) was
+also fetched read-only this session and confirmed **live and fully functional** — all
+8 sections render real data, resolving the long-standing "is this deployed?" unknown.
+See SESSION_LOG.md's newest entry for the full list of corrections.
+
 ## Project identity
 
 **Daily Brief** is a personal, single-user daily-briefing web app: one page that
@@ -28,16 +40,30 @@ design idea of the codebase — see `src/lib/types.ts`'s `Section<T>` type.
 
 - Repo root: `/Users/gariyuu/Projects/daily-brief`
 - GitHub: `https://github.com/Gariyuuu/daily-brief` (origin remote, confirmed via `git remote -v`)
-- Local Vercel link: project name `daily-brief` (see `.vercel/project.json`) — whether it
-  is currently deployed/live was **not verified** in this audit (no live URL recorded
-  anywhere in the repo's docs; see PROJECT_STATE.md and DEPLOYMENT.md).
+- Local Vercel link: project name `daily-brief` (see `.vercel/project.json`). **Live at
+  `https://daily-brief-lovat.vercel.app`** — [Verified 2026-08-17] fetched read-only
+  this session; renders a real, fully populated digest (weather, markets, news, sports,
+  music, crypto, tech, quote), confirming production env vars for at least GNews, FMP,
+  Spotify, and weather config are set. This is the default baked into
+  `NEXT_PUBLIC_SITE_URL`'s fallback in the new SEO files (`src/app/robots.ts`,
+  `src/app/sitemap.ts`, `src/app/layout.tsx`) — not independently confirmed via the
+  Vercel dashboard, but the live fetch is direct evidence. Whether `CRON_SECRET` and
+  Upstash are set in production is still **not verified** (see DEPLOYMENT.md).
 
 ## Current status
 
-Actively-developed personal project, 3 commits total, working tree **clean** as of this
-audit (see PROJECT_STATE.md for exact git state). All eight digest sections, the
-archive, the chat widget, and the cron endpoint are wired end-to-end and build/typecheck
-clean. No automated tests exist. See FEATURES.md for a per-feature status table.
+Actively-developed personal project, 10 commits total, working tree **clean** as of this
+2026-08-17 onboard sync (see PROJECT_STATE.md for exact git state). All eight digest
+sections, the archive, the chat widget, the cron endpoint, and (as of `37f84ef`) SEO
+metadata/Open Graph images/sitemap/robots and an animated chat "thinking" indicator are
+wired end-to-end and build/typecheck clean. No automated tests exist. See FEATURES.md
+for a per-feature status table.
+
+**Current task:** `DB-002` — rotate the still-live credential values sitting in
+`.env.example` (GNews, FMP, Spotify, Upstash) and replace them with obvious
+placeholders. Blocked: needs the maintainer's provider-dashboard access, so an agent
+can flag/prepare this but can't complete it unilaterally. See TASKS.md for full detail
+and DB-003 (make `CRON_SECRET` mandatory) as the next item after that.
 
 ## Technology stack
 
@@ -56,6 +82,9 @@ assume newer or older versions without re-checking.
   `src/app/api/chat/route.ts` — points at a self-hosted platform at
   `https://api.gariyuuu.com/v1`, model `"Yuu no Sekai"`, not OpenAI's own API)
 - **KV store**: `@upstash/redis` `^1.38.0` (used only in `src/lib/store.ts`)
+- **Chat loading indicator**: `thinking-orbs` `^0.3.1` (added commit `9b0e424`,
+  2026-08-15) — `<ThinkingOrb>` component used only in `src/components/ChatWidget.tsx`'s
+  "Thinking…" loading state.
 - **Date utils**: `date-fns` `^4.4.0` (declared in `package.json`; not actually imported
   anywhere in `src/` at time of audit — all date logic in `src/lib/utils/dates.ts` uses
   native `Date`/`Intl` instead — see "Known issues")
@@ -71,10 +100,12 @@ Run all commands from the repo root: `/Users/gariyuu/Projects/daily-brief`.
 ```bash
 npm install       # install dependencies
 npm run dev       # start Next.js dev server (Turbopack) on http://localhost:3000
-npm run build     # production build (verified clean during this audit)
+npm run build     # production build (re-verified clean 2026-08-17: 12 routes compiled,
+                  # including the 4 new SEO routes — see FEATURES.md)
 npm run start     # run the production build
-npm run lint      # eslint . (verified clean during this audit, exit code 0)
-npx tsc --noEmit  # typecheck (verified clean during this audit, exit code 0)
+npm run lint      # eslint (script changed from "eslint ." to "eslint" since the last
+                  # doc pass — same effective behavior; re-verified clean 2026-08-17)
+npx tsc --noEmit  # typecheck (re-verified clean 2026-08-17)
 ```
 
 There is **no test script** in `package.json` and no test framework/files anywhere in
@@ -90,9 +121,14 @@ daily-brief/
 │   │   ├── layout.tsx              # root layout, header/nav, mounts <ChatWidget/>
 │   │   ├── globals.css             # Tailwind v4 entry + CSS theme vars
 │   │   ├── favicon.ico, icon.svg   # branding assets
+│   │   ├── opengraph-image.tsx     # "/opengraph-image" — OG image for the home page
+│   │   ├── robots.ts               # "/robots.txt" — added commit 7240b1c
+│   │   ├── sitemap.ts              # "/sitemap.xml" — added commit 7240b1c
 │   │   ├── archive/
 │   │   │   ├── page.tsx            # "/archive" — list of past dates
-│   │   │   └── [date]/page.tsx     # "/archive/YYYY-MM-DD" — one past digest
+│   │   │   └── [date]/
+│   │   │       ├── page.tsx            # "/archive/YYYY-MM-DD" — one past digest
+│   │   │       └── opengraph-image.tsx # "/archive/[date]/opengraph-image" — per-date OG image
 │   │   └── api/
 │   │       ├── digest/route.ts     # GET (read/rebuild-if-stale) + POST (force refresh)
 │   │       ├── cron/route.ts       # GET, Vercel-Cron-triggered daily rebuild
@@ -175,7 +211,7 @@ See UI_SYSTEM.md for full detail. Summary: Tailwind v4, CSS-variable-based light
 theme (`src/app/globals.css`, driven by `prefers-color-scheme`, no manual toggle), Geist
 font family, a single reusable `<SectionCard>` shell (`src/components/SectionCard.tsx`)
 used by all 8 digest sections, sticky header with `Today` / `Archive` nav
-(`src/app/layout.tsx`), and a floating chat bubble (`ChatWidget.tsx`) mounted globally in
+(`src/app/layout.tsx`), and a floating chat bubble (`src/components/ChatWidget.tsx`) mounted globally in
 the root layout.
 
 ## Environment setup
@@ -200,9 +236,12 @@ rather than placeholders.
 | `UPSTASH_REDIS_REST_URL` | Redis REST endpoint for persistent archive | Optional — falls back to in-memory (non-persistent) store | Server only | HTTPS URL | `https://example.upstash.io` |
 | `UPSTASH_REDIS_REST_TOKEN` | Redis REST auth token | Optional (required together with the URL above) | Server only | opaque string | `your_upstash_token` |
 | `CRON_SECRET` | Bearer-token check on `GET /api/cron` | Optional but strongly recommended in production — **if unset, `/api/cron` has no auth check at all** | Server only | any random string | `openssl rand -hex 32` output |
+| `NEXT_PUBLIC_SITE_URL` | Canonical site URL for Open Graph tags, `sitemap.xml`, and `robots.txt` (`src/app/layout.tsx`, `robots.ts`, `sitemap.ts`) | Optional — falls back to `https://daily-brief-lovat.vercel.app` (hardcoded default, matches the confirmed-live deployment) | **Client** (build-time inlined, `NEXT_PUBLIC_` prefix) | Full HTTPS URL, no trailing slash | `https://your-deployment.vercel.app` | No — intentionally public |
 
-No `NEXT_PUBLIC_*` variables exist anywhere in the codebase — nothing is intentionally
-exposed to the client bundle.
+**Correction (2026-08-17):** the prior claim that "no `NEXT_PUBLIC_*` variables exist
+anywhere" is now **[Outdated]** — `NEXT_PUBLIC_SITE_URL` was added in commit `7240b1c`
+(2026-08-13). It is intentionally public (a URL, not a secret) and is the only
+`NEXT_PUBLIC_*` variable in the codebase.
 
 ## Database summary
 
@@ -230,11 +269,12 @@ per-source detail is in FEATURES.md.
 
 ## Testing and verification
 
-No test framework, no test files, no CI workflow found anywhere in the repo. Verified
-manually during this audit (all clean, see TESTING.md for exact commands/output):
-`npx tsc --noEmit` (exit 0), `npm run lint` (exit 0, `eslint .`), `npm run build`
-(succeeded, Turbopack, all routes compiled). No dev server was started and no real
-database/deploy was touched, per this audit's constraints.
+No test framework, no test files, no CI workflow found anywhere in the repo. Re-verified
+manually on 2026-08-17 (all clean): `npx tsc --noEmit` (exit 0), `npm run lint` (exit 0,
+`eslint`), `npm run build` (succeeded, Turbopack, 12 routes compiled — the original 7
+plus 4 new SEO routes and the icon). No dev server was started; the live production URL
+was fetched read-only (see "Deployment" below) but no local server or database write was
+performed.
 
 ## Deployment
 
@@ -243,10 +283,13 @@ Vercel, inferred from `vercel.json` (defines a Cron job) and `.vercel/project.js
 ```json
 { "crons": [{ "path": "/api/cron", "schedule": "0 12 * * *" }] }
 ```
-i.e., a single daily cron hitting `/api/cron` at 12:00 UTC. Whether the project is
-currently live, and whether `CRON_SECRET` and the other secrets are actually set in
-Vercel's production environment, was **not verified** in this audit (would require
-Vercel dashboard/CLI access outside this task's scope). See DEPLOYMENT.md.
+i.e., a single daily cron hitting `/api/cron` at 12:00 UTC. **The project is confirmed
+live** at `https://daily-brief-lovat.vercel.app` — [Verified 2026-08-17] fetched
+read-only, all 8 digest sections render real data (confirming `GNEWS_API_KEY`,
+`FMP_API_KEY`, `SPOTIFY_CLIENT_ID/SECRET`, and the weather config are set in
+production). Whether `CRON_SECRET`, `AI_PLATFORM_API_KEY`, and the Upstash vars are
+also set in production is still **not verified** — the chat widget and cron/archive
+persistence weren't exercised by a passive page fetch. See DEPLOYMENT.md.
 
 ## DO NOT CHANGE WITHOUT REVIEW
 

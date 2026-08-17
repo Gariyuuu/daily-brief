@@ -30,67 +30,91 @@ in `src/app/api/chat/route.ts`. No application code was changed in this pass.
 still holds live-looking GNews/FMP/Spotify/Upstash values on disk (never committed) —
 same finding as before, still unresolved (TASKS.md DB-002).
 
+**Update (2026-08-17, onboard sync)**: three real code commits landed after the
+2026-08-07 checkpoint without a doc update: `7240b1c`/`e47a545` (SEO metadata, Open
+Graph images via `next/og`, `src/app/robots.ts`, `src/app/sitemap.ts`, new `NEXT_PUBLIC_SITE_URL` env
+var) and `9b0e424`/`37f84ef` (animated `thinking-orbs` package added to `ChatWidget`'s
+loading state). `main` is now at `37f84ef` (10 commits total), tree clean, up to date
+with `origin/main`. This pass: re-read every changed file, corrected the now-false "no
+`NEXT_PUBLIC_*` variables" claim across `CLAUDE.md`/`ARCHITECTURE.md`/`SECURITY.md`,
+added the 4 new files to `FILE_MAP.md`/`ARCHITECTURE.md`, added a new FEATURES.md entry
+(#13, SEO metadata), updated `UI_SYSTEM.md`'s animation/loading-state claims, and — new
+this pass — **fetched the production URL read-only and confirmed it's live**:
+`https://daily-brief-lovat.vercel.app` renders a real, fully populated digest, resolving
+the long-standing "is this deployed?" unknown (though `CRON_SECRET`/`AI_PLATFORM_API_KEY`/
+Upstash production config remains unverified — a passive fetch doesn't exercise those
+paths). Re-ran `npx tsc --noEmit` (clean), `npm run lint` (clean, note: script text
+changed from `eslint .` to `eslint`, same effective behavior), and `npm run build`
+(clean, 12 routes now including the 4 new SEO routes). No application code was changed
+in this pass. `.env.example` still holds live-looking GNews/FMP/Spotify/Upstash values
+— unresolved, still TASKS.md DB-002 (now promoted to "Current task").
+
 ## Git state
 
 - **Branch**: `main` (only branch; `git branch -a` shows no other local or remote
   branches besides `remotes/origin/main`)
 - **Remote**: `origin` → `https://github.com/Gariyuuu/daily-brief.git`
-- **Latest commit**: `173c9ac` — "Switch chat feature from Anthropic to self-hosted
-  goat-ai-platform" (2026-08-06 22:27:17 -0700). Confirmed via `git log --oneline -5` and
-  `git fetch origin` during this checkpoint session (2026-08-07): branch is up to date
-  with `origin/main`, 0 ahead / 0 behind.
-- **Full commit history** (5 commits total):
-  1. `717550f` — "Initial commit from Create Next App" (2026-07-21 23:57:34 -0700)
-  2. `e46139d` — "Add digest sources, archive view, and chat widget" (2026-07-24
-     13:04:18 -0700)
-  3. `0cd8c68` — "Add custom favicon matching the app's newspaper branding" (2026-08-06
-     03:33:50 -0700)
-  4. `ab7a901` — "docs: add full handoff documentation system" (2026-08-06 20:20:07
-     -0700) — the original 17-file doc build this audit describes below.
-  5. `173c9ac` — "Switch chat feature from Anthropic to self-hosted goat-ai-platform"
-     (2026-08-06 22:27:17 -0700, HEAD) — Session 2's chat migration, committed.
+- **Latest commit**: `37f84ef` — "Merge branch 'chore/polish' into main" (2026-08-16).
+  Confirmed via `git log --oneline -10` on 2026-08-17: branch is up to date with
+  `origin/main`.
+- **Full commit history** (10 commits total, `git rev-list --count HEAD` confirmed,
+  newest first):
+  1. `37f84ef` — "Merge branch 'chore/polish' into main" (2026-08-16, HEAD)
+  2. `9b0e424` — "feat(chat): add animated thinking indicator to chat widget" (2026-08-15)
+  3. `e47a545` — "Merge chore/metadata-og: site + per-date metadata, OG images, sitemap, robots" (2026-08-14)
+  4. `7240b1c` — "chore: add OG images, robots.txt, sitemap, and richer metadata" (2026-08-13)
+  5. `e83d500` — "docs: checkpoint pass — fix stale Anthropic->self-hosted chat refs, git state" (2026-08-07)
+  6. `173c9ac` — "Switch chat feature from Anthropic to self-hosted goat-ai-platform" (2026-08-06)
+  7. `ab7a901` — "docs: add full handoff documentation system" (2026-08-06) — the original 17-file doc build.
+  8. `0cd8c68` — "Add custom favicon matching the app's newspaper branding" (2026-08-06)
+  9. `e46139d` — "Add digest sources, archive view, and chat widget" (2026-07-24)
+  10. `717550f` — "Initial commit from Create Next App" (2026-07-21)
 - **Working tree**: clean (`git status` → "nothing to commit, working tree clean") as of
-  this 2026-08-07 checkpoint pass, before this pass's own doc edits.
+  this 2026-08-17 onboard-sync pass, before this pass's own doc edits.
 - **Untracked files**: none. `.env.local` and `.env.example` exist on disk but are
   correctly excluded by `.gitignore`'s `.env*` rule and have never been committed
   (`git log --all --full-history -- .env.local` returns nothing).
 
 ## Active objective
 
-Bring `daily-brief` up to the same documentation standard as `chamber-seven` and
-`buildstrike-arena` — a full repo audit plus 17 handoff markdown files. This is a
-**documentation-only** task; no application behavior was changed.
+Originally: bring `daily-brief` up to the same documentation standard as
+`chamber-seven` and `buildstrike-arena` — a full repo audit plus 17 handoff markdown
+files (`DB-001`, done). As of 2026-08-17: keep those docs synced against real code
+drift (`DB-007`, this pass, done) — no ongoing objective beyond normal maintenance.
 
 ## Last completed task
 
-None prior to this audit — the repo had only `CLAUDE.md` (a single `@AGENTS.md` import
-line), `AGENTS.md`, `README.md` (create-next-app boilerplate), and `SETUP.md` (an
-accurate human-facing setup guide). No PROJECT_STATE.md, TASKS.md, or any of the other
-14 files existed before this session.
+`DB-007` (2026-08-17) — onboard sync reconciling 3 undocumented commits (SEO
+metadata/OG/sitemap/robots, `NEXT_PUBLIC_SITE_URL`, `thinking-orbs` chat indicator)
+across all affected docs; confirmed the production deployment is live. Before that,
+`DB-001` (2026-08-06/07) — the original 17-file doc build, later re-verified in a
+2026-08-07 checkpoint pass.
 
-## Current task (this session)
+## Current task (as of 2026-08-17 onboard sync)
 
-**Documentation audit and 17-file handoff doc build**, per the instructions given at
-session start. Status: in progress / nearing completion at the time this file was
-written.
+`DB-002` — rotate the still-live credential values in `.env.example` (GNews, FMP,
+Spotify, Upstash) and replace them with obvious placeholders. **Status: not started,
+blocked** on the maintainer's provider-dashboard access — no agent can complete this
+unilaterally. See TASKS.md for full acceptance criteria; DB-003 (mandatory
+`CRON_SECRET`) is the next item queued after this one.
 
-Related files: all 17 root-level `.md` files (`CLAUDE.md`, `PROJECT_STATE.md`,
-`ARCHITECTURE.md`, `FILE_MAP.md`, `FEATURES.md`, `TASKS.md`, `ROADMAP.md`,
-`DECISIONS.md`, `DATABASE.md`, `API_REFERENCE.md`, `UI_SYSTEM.md`, `SECURITY.md`,
-`TESTING.md`, `DEPLOYMENT.md`, `CHANGELOG.md`, `SESSION_LOG.md`, `HANDOFF.md`).
+The original `DB-001` (17-file doc build, 2026-08-06/07) and this pass's `DB-007`
+(2026-08-17 onboard sync, reconciling 3 undocumented commits) are both **done** — see
+"Recently completed" in TASKS.md.
 
-What has been attempted / completed so far:
-- Read every source file in `src/` (14 TS/TSX files under `lib/`, 9 under `components/`,
-  6 route/page files under `app/`), `package.json`, `.env.example` (names + noted the
-  values are live-looking, not read into any doc), `.gitignore`, `vercel.json`,
-  `next.config.ts`, `tsconfig.json`, `eslint.config.mjs`, `postcss.config.mjs`,
-  `README.md`, `SETUP.md`, `AGENTS.md`, `.vercel/project.json`, full `git log` and
-  `git status`.
-- Ran `npx tsc --noEmit` (exit 0, clean), `npm run lint` (exit 0, clean), `npm run build`
-  (succeeded — Turbopack, all 7 routes compiled/collected without error).
-- Rewrote `CLAUDE.md` (previously just the `@AGENTS.md` import) with full project
-  documentation.
-- Created this file (`PROJECT_STATE.md`).
+What this pass (2026-08-17) did:
+- Re-read every file changed since the 2026-08-07 checkpoint (`git diff --stat
+  e83d500..37f84ef`): `package.json`, `src/app/layout.tsx`, `src/app/opengraph-image.tsx`,
+  `src/app/archive/[date]/opengraph-image.tsx`, `src/app/robots.ts`, `src/app/sitemap.ts`,
+  `src/components/ChatWidget.tsx`.
+- Confirmed `THESPORTSDB_KEY` and `date-fns` are still unused (`grep -rn` returned
+  nothing in `src/`) — DB-004/DB-005 still valid, unchanged.
+- Re-ran `npx tsc --noEmit` (clean), `npm run lint` (clean), `npm run build` (clean, 12
+  routes).
+- Fetched `https://daily-brief-lovat.vercel.app` read-only — confirmed live.
+- Corrected `CLAUDE.md`, `ARCHITECTURE.md`, `SECURITY.md` (`NEXT_PUBLIC_SITE_URL`),
+  `FILE_MAP.md`, `FEATURES.md` (#13 added), `UI_SYSTEM.md`, `DEPLOYMENT.md`, `TASKS.md`,
+  this file, `HANDOFF.md`, `CHANGELOG.md`, `SESSION_LOG.md`, `.env.example`.
 
 ## What works (verified this audit)
 
@@ -113,14 +137,15 @@ What has been attempted / completed so far:
   a self-hosted OpenAI-compatible platform (model `"Yuu no Sekai"`) and verified it
   end-to-end with a real `npm run dev` + `curl` call (HTTP 200, real reply) — see
   SESSION_LOG.md. `/api/digest` and `/api/cron` remain unverified against real data.
-- Whether the Vercel deployment is currently live, and whether production env vars
-  (especially `CRON_SECRET`, `UPSTASH_REDIS_REST_URL/TOKEN`, `AI_PLATFORM_API_KEY`) are
-  actually set there, is **unverified** — would require Vercel dashboard/CLI access
-  outside this task's scope. Note: production still has the old `ANTHROPIC_API_KEY` var
-  name set (if it was ever configured there) — it must be renamed to
-  `AI_PLATFORM_API_KEY` in Vercel's project settings for chat to work in production.
+- **Resolved (2026-08-17)**: the Vercel deployment is confirmed live at
+  `https://daily-brief-lovat.vercel.app` (read-only fetch, real digest data rendered —
+  GNews/FMP/Spotify/weather config confirmed set in production). Still **unverified**:
+  whether `CRON_SECRET`, `UPSTASH_REDIS_REST_URL/TOKEN`, and `AI_PLATFORM_API_KEY` are
+  set there — a passive page fetch doesn't exercise the chat widget, cron route, or
+  archive-persistence path. The old `ANTHROPIC_API_KEY` var name note below is now
+  historical (chat migrated off Anthropic in commit `173c9ac`, well before this fetch).
 - Whether the daily Vercel Cron job (`vercel.json`, `0 12 * * *`) is actually registered
-  and firing in production is **unverified**.
+  and firing in production is still **unverified**.
 
 ## Current errors
 
@@ -153,16 +178,18 @@ be required (see TESTING.md's manual smoke-test checklist).
 ## Next three recommended actions
 
 1. **Rotate the credentials currently sitting in `.env.example`/`.env.local`** (GNews,
-   FMP, Spotify, Anthropic, Upstash) since they were read by this audit process and
-   should be treated as exposed, then replace `.env.example`'s values with obvious
-   placeholders (e.g. `your_gnews_api_key`) so future audits/agents never see real
-   values there. This is a security follow-up, not part of this documentation task.
+   FMP, Spotify, Upstash — re-confirmed still real-looking on 2026-08-17) then replace
+   `.env.example`'s values with obvious placeholders (e.g. `your_gnews_api_key`) so
+   future audits/agents never see real values there. `DB-002`, blocked on the
+   maintainer's provider-dashboard access.
 2. **Decide whether `CRON_SECRET` should be made mandatory** (reject unauthenticated
    `GET /api/cron` requests entirely rather than skipping the check when unset) — a
    deliberate security decision for the maintainer, not something to change silently.
-3. **Verify the Vercel deployment state** — confirm whether `daily-brief` is actually
-   live, whether the cron job is registered, and whether production env vars are set,
-   then update DEPLOYMENT.md and this file with the confirmed live URL (or lack thereof).
+   `DB-003`.
+3. **Confirm `CRON_SECRET`/`AI_PLATFORM_API_KEY`/Upstash are set in production** — the
+   2026-08-17 live fetch confirmed the deployment exists and GNews/FMP/Spotify/weather
+   are configured, but didn't exercise the chat widget, cron route, or archive
+   persistence, so those three remain unverified.
 
 ## Verification required before continuing any new feature work
 

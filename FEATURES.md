@@ -201,15 +201,18 @@ external APIs was **not** exercised (no dev server was started, per audit constr
   `reasoning: { enabled: false }` is passed (via `@ts-expect-error`, a platform-specific
   field not in the `openai` package's types) to keep the underlying Qwen3 model out of
   its verbose thinking mode.
-- **DB dependency**: reads (does not write) the day's digest from `store.ts` for context.
+- **DB dependency**: reads (does not write) the day's digest from `src/lib/store.ts` for context.
 - **Env vars**: `AI_PLATFORM_API_KEY` (server-only; route returns a 500 JSON error if
   absent, with no client-visible fallback UI beyond the error bubble).
 - **Validation**: route checks `messages.length === 0` → 400; does not validate message
   role/content shape beyond a TypeScript-level type (no runtime schema validation, e.g.
   no Zod).
-- **Error/loading/empty states**: loading = "Thinking…" bubble; error = an inline
-  assistant-style bubble prefixed with ⚠️ showing the caught error message; empty state
-  = a hint prompt shown before the first message.
+- **Error/loading/empty states**: loading = "Thinking…" bubble, now with an animated
+  `<ThinkingOrb>` (from the `thinking-orbs` `^0.3.1` package, added commit `9b0e424`,
+  2026-08-15) alongside the text — the "no spinner components" claim in UI_SYSTEM.md is
+  now [Outdated] for this one case; error = an inline assistant-style bubble prefixed
+  with ⚠️ showing the caught error message; empty state = a hint prompt shown before the
+  first message.
 - **Permissions**: none — no rate limiting on a route that costs real usage per call
   against the self-hosted platform.
 - **Known issues**: (1) no streaming (single request/response, listed as a "for later"
@@ -217,6 +220,28 @@ external APIs was **not** exercised (no dev server was started, per audit constr
   long-running chat sends the full history every turn); (4) no top-level try/catch
   around the `openai` client call itself — a thrown SDK error would surface as an
   unhandled 500, not a friendly JSON error (see API_REFERENCE.md).
+
+## 13. SEO metadata / Open Graph images / sitemap / robots
+
+- **Purpose**: make the site properly indexable and give it real link previews (title,
+  description, OG image) when shared, instead of Next.js's bare defaults.
+- **Status**: **Verified complete** — added commit `7240b1c` (2026-08-13),
+  re-verified this session via `npm run build` (all 4 new routes compile as static:
+  `/opengraph-image`, `/archive/-/opengraph-image`, `/robots.txt`, `/sitemap.xml`).
+- **Frontend**: `src/app/opengraph-image.tsx` (home OG image),
+  `src/app/archive/[date]/opengraph-image.tsx` (per-date OG image), both via `next/og`'s
+  `ImageResponse`. `src/app/layout.tsx`'s `metadata` export gained a title template,
+  description, Open Graph, and Twitter card block in the same commit.
+- **Backend**: `src/app/robots.ts` (`/robots.txt`, disallows `/api/`),
+  `src/app/sitemap.ts` (`/sitemap.xml`, lists `/` and `/archive`).
+- **Env vars**: `NEXT_PUBLIC_SITE_URL` (optional, client-exposed, not secret) — falls
+  back to `https://daily-brief-lovat.vercel.app` (the confirmed-live deployment URL) if
+  unset, in all four files independently (same fallback string hardcoded 4 times, not
+  shared via a constant — minor duplication, not a bug).
+- **Known issues**: none functional. `NEXT_PUBLIC_SITE_URL` isn't documented in
+  `SETUP.md` (which predates this feature) — low-priority doc gap, not fixed this pass
+  since `SETUP.md` is a human-facing guide outside this audit's core-file scope; see
+  TASKS.md.
 
 ## Cross-cutting: graceful degradation pattern
 

@@ -26,7 +26,10 @@ var. If it is unset, the check is skipped entirely and the route is fully open.
   `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `CRON_SECRET`. All are read only
   via `process.env.*` inside server-only files (`src/lib/sources/*.ts`,
   `src/lib/store.ts`, `src/app/api/*/route.ts`) — grep confirmed none are referenced
-  from any `"use client"` file, and no `NEXT_PUBLIC_*` variable exists anywhere.
+  from any `"use client"` file. One `NEXT_PUBLIC_*` variable now exists,
+  `NEXT_PUBLIC_SITE_URL` (added commit `7240b1c`, 2026-08-13) — it's an intentionally
+  public URL used for Open Graph/sitemap/robots, not a secret; see "Client-exposed vars"
+  below.
 - **Finding (High), re-confirmed 2026-08-07**: `.env.example` on disk (repo root)
   currently contains what appear to be **live, working credential values** — real-looking
   GNews, FMP, Spotify client ID/secret, and Upstash REST URL/token strings — instead of
@@ -54,7 +57,11 @@ var. If it is unset, the check is skipped entirely and the route is fully open.
 
 ## Client-exposed vars
 
-None found — no `NEXT_PUBLIC_*` variables exist in the codebase.
+**One**: `NEXT_PUBLIC_SITE_URL` (added commit `7240b1c`, 2026-08-13; read in
+`src/app/layout.tsx`, `src/app/robots.ts`, `src/app/sitemap.ts`). Confirmed safe to expose — it's the
+site's own canonical URL (falls back to `https://daily-brief-lovat.vercel.app`, the
+confirmed-live deployment), used only for Open Graph tags, `sitemap.xml`, and
+`robots.txt`. No credential, token, or internal-only value is exposed through it.
 
 ## Injection / XSS / CSRF risk
 

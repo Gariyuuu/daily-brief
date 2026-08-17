@@ -5,8 +5,30 @@ acceptance criteria, validation steps, blockers, and notes.
 
 ## Current task
 
-### DB-001 — Documentation audit and handoff doc build
-- **Status**: In progress (nearing completion at time of writing)
+### DB-002 — Rotate credentials found live in `.env.example`/`.env.local`
+- **Status**: Not started
+- **Priority**: High (security)
+- **Description**: every remaining real key (GNews, FMP, Spotify, Upstash) needs to be
+  regenerated at its provider; `.env.example` should then hold only obvious
+  placeholders (e.g. `your_gnews_api_key`), never real values. `AI_PLATFORM_API_KEY` is
+  already a placeholder in `.env.example` — this task covers the other four.
+- **Relevant files**: `.env.example`, `.env.local` (neither tracked by git).
+- **Dependencies**: none.
+- **Acceptance criteria**: every listed credential is regenerated at its provider and
+  `.env.example` holds only obvious placeholders.
+- **Validation steps**: confirm the app still runs with `npm run dev` after updating
+  `.env.local` with the new real values (kept out of `.env.example`).
+- **Blockers**: requires access to each provider's dashboard (GNews, FMP, Spotify,
+  Upstash Console) — outside any agent's scope; needs the maintainer to act directly.
+- **Notes**: re-confirmed still open this session (2026-08-17) — `.env.example` on disk
+  still holds non-placeholder-looking values for `GNEWS_API_KEY`, `FMP_API_KEY`,
+  `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `UPSTASH_REDIS_REST_URL`, and
+  `UPSTASH_REDIS_REST_TOKEN` (checked by pattern only, no value read into this doc).
+  Do not fix this by silently rotating or deleting anything — flag it and wait for the
+  maintainer.
+
+### DB-001 — Documentation audit and handoff doc build — DONE
+- **Status**: Complete (committed `ab7a901`, then re-verified `e83d500`)
 - **Priority**: High (explicitly requested)
 - **Description**: Full repository audit of `daily-brief`, verify/rewrite `CLAUDE.md`,
   and create the 16 other standard handoff docs (PROJECT_STATE, ARCHITECTURE, FILE_MAP,
@@ -34,21 +56,8 @@ acceptance criteria, validation steps, blockers, and notes.
 
 ## Next up
 
-- **DB-002 — Rotate credentials found live in `.env.example`/`.env.local`.**
-  Priority: **High** (security). Files: `.env.example`, `.env.local` (neither tracked
-  by git). Dependencies: none. Acceptance criteria: every remaining real key
-  (GNews, FMP, Spotify, Upstash) is regenerated at its provider and `.env.example`
-  holds only obvious placeholders (e.g. `your_gnews_api_key`), never real values.
-  Validation: confirm the app still runs with `npm run dev` after updating
-  `.env.local` with the new real values (kept out of `.env.example`). Blockers:
-  requires access to each provider's dashboard (GNews, FMP, Spotify, Upstash Console)
-  — outside this audit's scope. Notes: the Anthropic key that used to be part of this
-  list is no longer relevant to this app's `.env.example`/`.env.local` — chat was
-  migrated off Anthropic entirely in Session 2 (see DB-006, SESSION_LOG.md), and both
-  files now hold `AI_PLATFORM_API_KEY` instead. The maintainer may still want to revoke
-  the old Anthropic key at Anthropic's console since this app no longer uses it, but
-  that's outside this repo's scope to action. This audit found the other four values
-  but did not read/reproduce them anywhere; see SECURITY.md.
+(DB-002 is now the Current task above, not repeated here — see that entry.)
+
 - **DB-003 — Make `CRON_SECRET` mandatory (reject, don't skip, when unset).**
   Priority: Medium-High. Files: `src/app/api/cron/route.ts`. Dependencies: DB-002 should
   land first so a real `CRON_SECRET` exists in production before tightening the check.
@@ -75,6 +84,12 @@ acceptance criteria, validation steps, blockers, and notes.
   OpenAI-compatible platform (`https://api.gariyuuu.com/v1`, model `"Yuu no Sekai"`),
   and was tested end-to-end with a real `npm run dev` + `curl` call (HTTP 200, real
   reply). See SESSION_LOG.md Session 2 and CLAUDE.md's "Known issues" item 5.
+- **DB-008 — Document `NEXT_PUBLIC_SITE_URL` in `SETUP.md`.** Priority: Low. Files:
+  `SETUP.md`. Description: `SETUP.md` predates the SEO/OG feature (commit `7240b1c`)
+  and doesn't mention `NEXT_PUBLIC_SITE_URL`, unlike `.env.example`/`CLAUDE.md` (both
+  updated in this pass). Acceptance criteria: `SETUP.md` mentions the var as optional,
+  consistent with `.env.example`. Blockers: none technical — left undone this pass
+  since `SETUP.md` is a human-facing guide outside the core memory-file set.
 
 ## Blocked
 
@@ -94,6 +109,7 @@ None currently (DB-006 resolved).
 
 - DB-004 (THESPORTSDB_KEY cleanup)
 - DB-005 (date-fns cleanup)
+- DB-008 (document NEXT_PUBLIC_SITE_URL in SETUP.md)
 
 ## Bugs
 
@@ -107,7 +123,7 @@ runtime bugs, since no live traffic was exercised in this audit.
   unauthenticated).
 - No error boundary/try-catch at the top level of `/api/digest` and `/api/cron`'s
   route handlers around `buildDigest()`/`saveDigest()`.
-- `ChatWidget.tsx`'s error handling uses a plain error bubble; `RefreshButton.tsx` uses
+- `src/components/ChatWidget.tsx`'s error handling uses a plain error bubble; `src/components/RefreshButton.tsx` uses
   a blocking browser `alert()` — inconsistent error UX patterns across the two client
   components.
 - No formatter (Prettier) config — formatting consistency depends entirely on
@@ -133,7 +149,13 @@ resolved state instead of leaving them listed as open gaps.
 
 ## Recently completed
 
-- DB-001 (this audit) — documentation build, in progress/nearing completion.
+- DB-007 (2026-08-17, onboard sync) — reconciled all docs against 3 undocumented
+  commits (SEO metadata/OG images/sitemap/robots, `NEXT_PUBLIC_SITE_URL`, animated
+  chat thinking indicator via `thinking-orbs`); confirmed the production deployment is
+  live via a read-only fetch; re-ran `tsc`/`lint`/`build` (all clean). See
+  SESSION_LOG.md's newest entry.
+- DB-001 (2026-08-06/07) — documentation build, complete (17 files, later re-verified
+  in a checkpoint pass).
 - DB-006 (2026-08-06, Session 2) — chat migrated off Anthropic to a self-hosted
   OpenAI-compatible platform (`openai` SDK, `https://api.gariyuuu.com/v1`, model
   `"Yuu no Sekai"`); verified end-to-end with a real request. See SESSION_LOG.md.

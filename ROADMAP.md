@@ -71,8 +71,8 @@ given).
   currently exists.
 - Add minimal automated tests around the error-handling paths in
   `src/lib/sources/*.ts` and `src/lib/aggregate.ts`'s `isStale()` logic.
-- Replace `RefreshButton.tsx`'s blocking `alert()` on error with inline UI, to match
-  `ChatWidget.tsx`'s inline error-bubble pattern.
+- Replace `src/components/RefreshButton.tsx`'s blocking `alert()` on error with inline UI, to match
+  `src/components/ChatWidget.tsx`'s inline error-bubble pattern.
 
 ## Out of scope
 

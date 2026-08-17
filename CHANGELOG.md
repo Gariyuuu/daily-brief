@@ -4,6 +4,26 @@ No CHANGELOG.md existed before the 2026-08-06 documentation audit. The entries b
 the pre-audit period are reconstructed directly from `git log` (not invented) — these are
 the repo's only real history. Dates are the actual commit timestamps.
 
+## [Unreleased] — 2026-08-17 — Onboard sync (no app code changed)
+
+Re-verified all docs against `main` at `37f84ef` (10 commits total). Found 3 real code
+commits had landed since the 2026-08-07 checkpoint without a matching doc update:
+`7240b1c`/`e47a545` (2026-08-13/14 — SEO metadata, Open Graph images via `next/og`,
+`src/app/robots.ts`, `src/app/sitemap.ts`, and a new client-exposed `NEXT_PUBLIC_SITE_URL` env var) and
+`9b0e424`/`37f84ef` (2026-08-15/16 — animated `thinking-orbs` package added to
+`ChatWidget`'s "Thinking…" loading state). Corrected the now-false "no `NEXT_PUBLIC_*`
+variables exist" claim in `CLAUDE.md`, `ARCHITECTURE.md`, and `SECURITY.md`; added the
+4 new files to `FILE_MAP.md`/`ARCHITECTURE.md`; added FEATURES.md entry #13 (SEO
+metadata); updated `UI_SYSTEM.md`'s animation/loading-state claims; updated
+`DEPLOYMENT.md`/`PROJECT_STATE.md`. New this pass: fetched the production URL
+(`https://daily-brief-lovat.vercel.app`) read-only and confirmed it's live with real
+digest data — resolving the long-standing "is this deployed?" unknown (though
+`CRON_SECRET`/`AI_PLATFORM_API_KEY`/Upstash production config remains unverified). Also
+re-confirmed `THESPORTSDB_KEY` and `date-fns` are still unused, and `.env.example`
+still holds live-looking GNews/FMP/Spotify/Upstash values (unresolved, TASKS.md
+DB-002, now the current task). Re-ran `npx tsc --noEmit`, `npm run lint`, and
+`npm run build` — all clean (12 routes, up from 7). No application code was changed.
+
 ## [Unreleased] — 2026-08-07 — Documentation checkpoint pass (no app code changed)
 
 A "final transfer checkpoint" doc audit: re-verified all 17 handoff docs against the live

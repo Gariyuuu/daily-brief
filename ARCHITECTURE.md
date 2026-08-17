@@ -87,11 +87,11 @@ The split that matters is **server vs. client components**:
 - **Server components** (default, no `"use client"`): `src/app/page.tsx`,
   `src/app/archive/page.tsx`, `src/app/archive/[date]/page.tsx`, `src/app/layout.tsx`,
   and every one of the 8 digest-section presentational components
-  (`WeatherCard.tsx`, `NewsList.tsx`, `SportsScores.tsx`, `StockMovers.tsx`,
-  `MusicReleases.tsx`, `CryptoTicker.tsx`, `TechNews.tsx`, `ExtraCard.tsx`,
-  `SectionCard.tsx`, `DigestView.tsx`). These run only on the server, read env vars
+  (`src/components/WeatherCard.tsx`, `src/components/NewsList.tsx`, `src/components/SportsScores.tsx`, `src/components/StockMovers.tsx`,
+  `src/components/MusicReleases.tsx`, `src/components/CryptoTicker.tsx`, `src/components/TechNews.tsx`, `src/components/ExtraCard.tsx`,
+  `src/components/SectionCard.tsx`, `src/components/DigestView.tsx`). These run only on the server, read env vars
   directly, and can call `src/lib/*` freely.
-- **Client components** (`"use client"`): `ChatWidget.tsx` and `RefreshButton.tsx` —
+- **Client components** (`"use client"`): `src/components/ChatWidget.tsx` and `src/components/RefreshButton.tsx` —
   both are interactive (state, event handlers) and talk to the server exclusively
   through `fetch()` calls to `/api/chat` and `/api/digest`.
 
@@ -100,9 +100,11 @@ The split that matters is **server vs. client components**:
 - `src/lib/sources/*.ts`, `src/lib/store.ts`, and all three `src/app/api/*/route.ts`
   files run **server-only** — they read secret env vars (`GNEWS_API_KEY`, `FMP_API_KEY`,
   `AI_PLATFORM_API_KEY`, `UPSTASH_REDIS_REST_TOKEN`, etc.) that must never reach the
-  client bundle. None of these are imported from any `"use client"` file, and no
-  `NEXT_PUBLIC_*` variable exists anywhere — there is currently no path for a secret to
-  leak into client JS.
+  client bundle. None of these are imported from any `"use client"` file. **Correction
+  (2026-08-17):** one `NEXT_PUBLIC_*` variable now exists — `NEXT_PUBLIC_SITE_URL`
+  (added commit `7240b1c`, read in `src/app/layout.tsx`, `src/app/robots.ts`, `src/app/sitemap.ts`) — but
+  it's a public URL, not a secret, so this doesn't reopen the "no secret leak path"
+  conclusion below.
 - The client only ever sees the already-aggregated `Digest` JSON (rendered server-side
   into the page, or returned from `/api/digest`/`/api/chat` as JSON) — never the raw
   upstream API responses or any key.
@@ -122,7 +124,7 @@ The split that matters is **server vs. client components**:
    starts collapsed.
 
 **Clicking "🔄 Refresh Now":**
-1. `RefreshButton.tsx` (client) `POST`s to `/api/digest`.
+1. `src/components/RefreshButton.tsx` (client) `POST`s to `/api/digest`.
 2. `src/app/api/digest/route.ts`'s `POST` handler always rebuilds today's digest from
    live sources (no staleness check) and overwrites the stored snapshot.
 3. Client calls `router.refresh()` to re-render the server component with fresh data.
@@ -145,7 +147,7 @@ The split that matters is **server vs. client components**:
    saved for that date.
 
 **Chat:**
-1. `ChatWidget.tsx` derives the "context date" from the URL (`/archive/YYYY-MM-DD`
+1. `src/components/ChatWidget.tsx` derives the "context date" from the URL (`/archive/YYYY-MM-DD`
    matches that date; anywhere else, including `/`, means "today", left `undefined` and
    defaulted server-side).
 2. `POST /api/chat` with `{ messages, date }`. The route loads that date's stored digest
@@ -208,7 +210,7 @@ if nobody visits before noon) rather than a hard dependency for correctness.
 
 - Next.js `fetch()` data cache is explicitly disabled on every external call
   (`{ next: { revalidate: 0 } }`) — always live fetch.
-- `src/app/page.tsx`, `archive/page.tsx`, and `archive/[date]/page.tsx` all set
+- `src/app/page.tsx`, `src/app/archive/page.tsx`, and `src/app/archive/[date]/page.tsx` all set
   `export const dynamic = "force-dynamic"` — no static generation/ISR for any of them
   (confirmed by `npm run build`'s route table: all marked `ƒ` dynamic except
   `/_not-found` and `/icon.svg`).
@@ -239,7 +241,21 @@ by default for serverless function invocations is the only observability availab
 Single Vercel project (`daily-brief`, per `.vercel/project.json`), Next.js's default
 serverless function deployment for each route, plus the Vercel Cron integration
 described above. No separate services, no Docker, no infra-as-code files found. See
-DEPLOYMENT.md.
+DEPLOYMENT.md. **Confirmed live** (2026-08-17, read-only fetch) at
+`https://daily-brief-lovat.vercel.app`.
+
+## SEO surface (added commit `7240b1c`, 2026-08-13)
+
+Four new App Router special files, all statically generated (confirmed via
+`npm run build`'s route table — all marked `○` static): `src/app/opengraph-image.tsx`
+(home page OG image, generated via `next/og`'s `ImageResponse`),
+`src/app/archive/[date]/opengraph-image.tsx` (per-date OG image, same technique),
+`src/app/robots.ts` (`/robots.txt`, disallows `/api/`), `src/app/sitemap.ts`
+(`/sitemap.xml`, lists `/` and `/archive`). All four read `NEXT_PUBLIC_SITE_URL` with
+the same hardcoded fallback (`https://daily-brief-lovat.vercel.app`). `src/app/layout.tsx`
+also gained a full `metadata` object (title template, description, Open Graph, Twitter
+card) in the same commit. This is documentation-only scope for this pass — the feature
+was already built and working; see FEATURES.md for its status entry.
 
 ## Security boundaries
 
@@ -266,5 +282,5 @@ DEPLOYMENT.md.
    response.
 5. **Single point of external dependency for the archive feature**: if Upstash's free
    tier is ever exceeded or the account lapses, `hasUpstash` still evaluates true (env
-   vars present) but calls could start failing — `store.ts` doesn't catch/fallback in
+   vars present) but calls could start failing — `src/lib/store.ts` doesn't catch/fallback in
    that case, it would throw up to the caller.

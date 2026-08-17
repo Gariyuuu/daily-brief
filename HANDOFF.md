@@ -20,36 +20,46 @@ with zero configured API keys (4 of 8 sections are keyless); the rest show a
 
 ## What is the current task?
 
-**DB-001** (the original 17-file documentation audit) and the **chat-feature migration**
-(off Anthropic, commit `173c9ac`) are both complete and committed — `git log` shows
-`173c9ac` as HEAD, working tree clean, up to date with `origin/main`. A 2026-08-07
-"final transfer checkpoint" pass then re-verified all 17 docs against the live repo and
-fixed several files that still described the pre-migration Anthropic-based chat
-implementation as current (see CHANGELOG.md's 2026-08-07 entry for the full list).
+**`DB-002`** — rotate the still-live credential values sitting in `.env.example`
+(GNews, FMP, Spotify, Upstash) and replace them with obvious placeholders. **Status:
+not started, blocked** on the maintainer's provider-dashboard access — no agent can
+finish this unilaterally, but it's the top of the queue. **DB-003** (make `CRON_SECRET`
+mandatory) is next after that.
 
-There is no other in-progress task right now. The next task is whatever the maintainer
-prioritizes from TASKS.md's "Next up" list — most likely **DB-002: rotate the
-credentials still live in `.env.example`/`.env.local`** (GNews, FMP, Spotify, Upstash)
-and replace that file's values with placeholders, or **DB-003: make `CRON_SECRET`
-mandatory** if the user prioritizes that instead.
+Everything before this is done and committed: `DB-001` (the original 17-file
+documentation audit, `ab7a901`), the chat-feature migration off Anthropic (`173c9ac`),
+a 2026-08-07 checkpoint pass, and — most recently — `DB-007`, a 2026-08-17 onboard sync
+that caught up the docs on 3 commits that had landed without a doc update (SEO
+metadata/Open Graph images/`src/app/robots.ts`/`src/app/sitemap.ts`, a new `NEXT_PUBLIC_SITE_URL` env
+var, and an animated `thinking-orbs` chat loading indicator) and confirmed the
+production deployment is live at `https://daily-brief-lovat.vercel.app`. `git log`
+shows `37f84ef` as HEAD (10 commits total), working tree clean, up to date with
+`origin/main`.
 
 ## What works right now?
 
-Per this audit's verification: `npx tsc --noEmit`, `npm run lint`, and `npm run build`
-all pass clean. Every one of the 8 digest sections is wired end-to-end in code with
-graceful degradation (missing key / fetch failure → friendly UI message, never a
-crash). The archive, refresh button, and chat widget are all fully wired in code. See
-FEATURES.md for the per-feature status table — nothing is classified worse than
-"Mostly complete," and several keyless sections are "Verified complete."
+Per this session's re-verification (2026-08-17): `npx tsc --noEmit`, `npm run lint`,
+and `npm run build` all pass clean (12 routes, up from 7, after the SEO feature added
+4 new static routes). Every one of the 8 digest sections is wired end-to-end in code
+with graceful degradation (missing key / fetch failure → friendly UI message, never a
+crash). The archive, refresh button, chat widget, and (new) SEO metadata/OG images/
+sitemap/robots are all fully wired in code. **The production deployment is confirmed
+live** — `https://daily-brief-lovat.vercel.app` was fetched read-only this session and
+renders a real, fully populated digest. See FEATURES.md for the per-feature status
+table — nothing is classified worse than "Mostly complete," and several keyless
+sections are "Verified complete."
 
 ## What's broken?
 
-Nothing found to be actually broken in the code (no failing build/lint/typecheck, no
-obvious logic bugs). The real issues are **risks/gaps**, not bugs:
+Nothing found to be actually broken in the code (no failing build/lint/typecheck as of
+2026-08-17, no obvious logic bugs). The real issues are **risks/gaps**, not bugs:
 - `.env.example` on disk holds live-looking credential values instead of placeholders
-  (never committed to git, but should be rotated — see SECURITY.md).
-- `GET /api/cron` has no auth when `CRON_SECRET` is unset.
-- `THESPORTSDB_KEY` is dead config (sports actually uses ESPN).
+  (never committed to git, but should be rotated — see SECURITY.md). Re-confirmed still
+  the case on 2026-08-17.
+- `GET /api/cron` has no auth when `CRON_SECRET` is unset — whether it's actually set
+  in production is still unverified.
+- `THESPORTSDB_KEY` is dead config (sports actually uses ESPN) — re-confirmed unused.
+- `date-fns` is still an unused dependency — re-confirmed unused.
 - No tests, no CI, no rate limiting exist anywhere.
 
 Resolved since the original audit: the chat feature no longer uses Anthropic at all —
@@ -59,10 +69,13 @@ DECISIONS.md D-016 and SESSION_LOG.md Session 2.
 
 ## What should I do next?
 
-If continuing straight documentation work: nothing — DB-001 is done. If picking up
-feature/security work: start with DB-002 (credential rotation) since it's flagged
-High priority and has zero technical blockers, just needs provider-dashboard access.
-See TASKS.md for the full prioritized list and exact acceptance criteria for each.
+If continuing straight documentation work: nothing — DB-001 and DB-007 are both done.
+If picking up feature/security work: start with DB-002 (credential rotation) since
+it's flagged High priority — it has no *technical* blocker, just needs the
+maintainer's provider-dashboard access (not something an agent can do). If that access
+isn't available, DB-003 (mandatory `CRON_SECRET`) or DB-008 (document
+`NEXT_PUBLIC_SITE_URL` in `SETUP.md`) are unblocked alternatives. See TASKS.md for the
+full prioritized list and exact acceptance criteria for each.
 
 ## Which files are most important?
 

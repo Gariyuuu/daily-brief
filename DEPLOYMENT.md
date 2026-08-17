@@ -8,9 +8,17 @@ project name `daily-brief`), and `SETUP.md`'s explicit deploy instructions
 (`vercel login`, `vercel`, `vercel env add ...`, `vercel --prod`). No other hosting
 config (Netlify, Cloudflare Pages, Docker, etc.) exists anywhere in the repo.
 
-**Whether the project is currently live in production was not verified in this
-audit** — no live URL is recorded in any repo file, and checking Vercel's dashboard/API
-was outside this task's non-destructive, doc-only scope.
+**Confirmed live (2026-08-17)** at `https://daily-brief-lovat.vercel.app` — this is the
+hardcoded fallback baked into `NEXT_PUBLIC_SITE_URL`'s usage in the SEO files added
+commit `7240b1c` (`src/app/layout.tsx`, `src/app/robots.ts`, `src/app/sitemap.ts`), and this session
+fetched it read-only: it renders a real, fully populated digest (weather, markets,
+news, sports, music, crypto, tech, quote), confirming `GNEWS_API_KEY`, `FMP_API_KEY`,
+`SPOTIFY_CLIENT_ID/SECRET`, and the weather config are set in production. **Still
+unverified**: whether `CRON_SECRET`, `AI_PLATFORM_API_KEY`, and the Upstash vars are
+set in production (a passive page fetch doesn't exercise the chat widget, cron route,
+or archive-persistence path) — checking those would require actually using the chat
+widget or hitting `/api/cron`/`/archive`, not attempted this session to stay
+non-destructive.
 
 ## Build / install commands
 
@@ -34,8 +42,9 @@ repo-enforced constraint.
 
 Every env var listed in CLAUDE.md's "Environment setup" table must be added to the
 Vercel project (Project Settings → Environment Variables) for production behavior to
-match local `.env.local` behavior. `SETUP.md` documents the `vercel env add <NAME>
-production` flow for each one. **Do not add real values to any file in this repo** —
+match local `.env.local` behavior. `SETUP.md` documents the `vercel env add VAR_NAME
+production` flow for each one (e.g. `vercel env add GNEWS_API_KEY production`). **Do
+not add real values to any file in this repo** —
 they belong only in Vercel's env var store and local `.env.local` (both outside git).
 
 Per `SETUP.md`, adding/changing env vars requires a redeploy (`vercel --prod`) to take

@@ -13,11 +13,11 @@ addition (append-only). This is the first entry — no prior log existed.
   sibling projects `chamber-seven` and `buildstrike-arena` — audit the entire repo and
   create/update 17 root-level markdown files, without changing any application
   behavior or committing/pushing/deploying anything.
-- **Files inspected**: every file in `src/` (`app/page.tsx`, `app/layout.tsx`,
-  `app/globals.css`, `app/archive/page.tsx`, `app/archive/[date]/page.tsx`,
-  `app/api/digest/route.ts`, `app/api/cron/route.ts`, `app/api/chat/route.ts`, all 9
-  files in `components/`, `lib/types.ts`, `lib/aggregate.ts`, `lib/store.ts`,
-  `lib/utils/dates.ts`, all 8 files in `lib/sources/`); `package.json`,
+- **Files inspected**: every file in `src/` (`src/app/page.tsx`, `src/app/layout.tsx`,
+  `src/app/globals.css`, `src/app/archive/page.tsx`, `src/app/archive/[date]/page.tsx`,
+  `src/app/api/digest/route.ts`, `src/app/api/cron/route.ts`, `src/app/api/chat/route.ts`, all 9
+  files in `components/`, `src/lib/types.ts`, `src/lib/aggregate.ts`, `src/lib/store.ts`,
+  `src/lib/utils/dates.ts`, all 8 files in `lib/sources/`); `package.json`,
   `package-lock.json` (existence only), `.env.example` (variable names — values noted
   but not reproduced), `.gitignore`, `vercel.json`, `next.config.ts`, `tsconfig.json`,
   `eslint.config.mjs`, `postcss.config.mjs`, `README.md`, `SETUP.md`, `AGENTS.md`,
@@ -133,3 +133,54 @@ addition (append-only). This is the first entry — no prior log existed.
   in TASKS.md (DB-002 credential rotation for the *other* four still-real env values,
   DB-003 mandatory `CRON_SECRET`, DB-004/DB-005 cleanup) remain open and unrelated to
   this change.
+
+---
+
+## Session 3 — 2026-08-17 — Onboard sync (repo-memory batch sweep, no app code changed)
+
+- **Account/agent**: Claude (repo-memory skill, onboard mode) — part of a 5-repo batch
+  documentation sweep; no prior conversation with this repo.
+- **Goal**: verify the existing 17-file memory system against current repo state (it
+  was last touched 2026-08-06/07, and `main` had moved on since) and correct any drift
+  found, per the batch task's explicit instruction to correct stale content in onboard
+  mode rather than only reporting it.
+- **Files inspected**: all 17 existing root `.md` files in full; `git log --oneline -30`
+  and `git diff --stat e83d500..37f84ef` to find undocumented changes; the diff content
+  of `package.json`, `src/app/layout.tsx`, `src/app/opengraph-image.tsx`,
+  `src/app/archive/[date]/opengraph-image.tsx`, `src/app/robots.ts`, `src/app/sitemap.ts`,
+  `src/components/ChatWidget.tsx`; `src/lib/sources/sports.ts` (re-confirmed
+  `THESPORTSDB_KEY` still unused); `.env.example` (names + placeholder-vs-real pattern
+  check only, no values reproduced); `.vercel/project.json`; `SETUP.md`; `git status`.
+- **Files changed**: `CLAUDE.md`, `PROJECT_STATE.md`, `TASKS.md`, `HANDOFF.md`,
+  `ARCHITECTURE.md`, `FILE_MAP.md`, `FEATURES.md`, `SECURITY.md`, `DEPLOYMENT.md`,
+  `UI_SYSTEM.md`, `CHANGELOG.md`, `SESSION_LOG.md` (this entry), `.env.example`
+  (added `NEXT_PUBLIC_SITE_URL` placeholder row). `README.md`, `SETUP.md`,
+  `DATABASE.md`, `API_REFERENCE.md`, `DECISIONS.md`, `ROADMAP.md`, `TESTING.md` were
+  read and found still accurate — left unchanged.
+- **Commands run**: `npx tsc --noEmit` (exit 0), `npm run lint` (exit 0), `npm run build`
+  (succeeded, 12 routes — up from 7, the 4 new SEO routes plus `/icon.svg`), `git log`,
+  `git diff --stat`, `grep -rn "THESPORTSDB\|date-fns" src/` (both empty, confirming
+  still unused), a read-only fetch of `https://daily-brief-lovat.vercel.app`.
+- **Tests run**: none exist (see TESTING.md). The production fetch above is the closest
+  thing to a live check performed this session.
+- **Results**: typecheck/lint/build all clean. Found 3 real, undocumented commits
+  (`7240b1c`, `e47a545`, `9b0e424`, `37f84ef`) — SEO metadata/Open Graph
+  images/`src/app/robots.ts`/`src/app/sitemap.ts` plus a new `NEXT_PUBLIC_SITE_URL` env var, and an
+  animated `thinking-orbs` chat loading indicator. The "no `NEXT_PUBLIC_*` variables"
+  claim in 3 files was `[Outdated]` and is now corrected. The production deployment,
+  previously an open `[Unknown]` in every doc that mentioned it, is now confirmed live.
+- **Decisions made**: promoted `DB-002` (credential rotation) from "Next up" to
+  "Current task" across all four core files (it was already the de facto next priority
+  in every doc, just not formally marked current); added `DB-007` (this sync, done) and
+  `DB-008` (document `NEXT_PUBLIC_SITE_URL` in `SETUP.md`, low priority, not done this
+  pass since `SETUP.md` is outside the core memory-file set).
+- **Problems found**: none new beyond the doc drift described above. `.env.example`
+  re-confirmed to still hold live-looking GNews/FMP/Spotify/Upstash values (DB-002
+  still open, no value read into any doc).
+- **Work completed**: full doc set re-synced with current code and git state;
+  `verify_docs.py` passes clean (see below); memory files committed.
+- **Work remaining**: `DB-002` (blocked on maintainer), `DB-003`, `DB-004`, `DB-005`,
+  `DB-008` all still open — see TASKS.md.
+- **Recommended next action**: `DB-002` (credential rotation) if the maintainer has
+  provider-dashboard access available; otherwise `DB-003` (mandatory `CRON_SECRET`) or
+  `DB-008` (SETUP.md doc gap) are unblocked alternatives.
