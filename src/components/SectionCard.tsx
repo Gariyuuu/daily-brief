@@ -11,7 +11,7 @@ export function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-black/10 dark:border-white/10 bg-black/[.02] dark:bg-white/[.03] p-5">
+    <section className="rounded-2xl border border-input bg-black/[.02] dark:bg-white/[.03] p-5">
       <h2 className="text-base font-semibold mb-3 flex items-center gap-2">
         <span aria-hidden>{icon}</span>
         {title}

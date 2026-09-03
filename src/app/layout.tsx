@@ -50,7 +50,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <header className="sticky top-0 z-40 border-b border-black/10 dark:border-white/10 bg-[var(--background)]/90 backdrop-blur">
+        <header className="sticky top-0 z-40 border-b border-input bg-[var(--background)]/90 backdrop-blur">
           <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between">
             <Link href="/" className="font-semibold tracking-tight text-lg">
               🗞️ Daily Brief

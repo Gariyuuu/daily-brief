@@ -66,8 +66,8 @@ export default function ChatWidget() {
   }
 
   return (
-    <div className="fixed bottom-5 right-5 w-[min(24rem,calc(100vw-2.5rem))] h-[min(32rem,calc(100vh-6rem))] rounded-2xl border border-black/10 dark:border-white/10 bg-[var(--background)] shadow-2xl flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-black/10 dark:border-white/10">
+    <div className="fixed bottom-5 right-5 w-[min(24rem,calc(100vw-2.5rem))] h-[min(32rem,calc(100vh-6rem))] rounded-2xl border border-input bg-[var(--background)] shadow-2xl flex flex-col overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-input">
         <p className="font-medium text-sm">
           💬 Ask about {date ?? "today's"} brief
         </p>
@@ -105,12 +105,12 @@ export default function ChatWidget() {
           </div>
         )}
       </div>
-      <form onSubmit={handleSubmit} className="flex gap-2 p-3 border-t border-black/10 dark:border-white/10">
+      <form onSubmit={handleSubmit} className="flex gap-2 p-3 border-t border-input">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask a question…"
-          className="flex-1 rounded-full border border-black/10 dark:border-white/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground/40"
+          className="flex-1 rounded-full border border-input bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground/40"
         />
         <button
           type="submit"
