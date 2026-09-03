@@ -20,7 +20,7 @@ export default async function ArchivePage() {
           No past days yet — check back tomorrow, or hit Refresh on today&apos;s brief.
         </p>
       ) : (
-        <ul className="divide-y divide-black/10 dark:divide-white/10 rounded-2xl border border-black/10 dark:border-white/10 overflow-hidden">
+        <ul className="divide-y divide-black/10 dark:divide-white/10 rounded-2xl border border-input overflow-hidden">
           {dates.map((date) => (
             <li key={date}>
               <Link
