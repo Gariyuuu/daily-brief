@@ -1,9 +1,10 @@
+import { Disc3 } from "lucide-react";
 import { MusicData, Section } from "@/lib/types";
 import { SectionCard, Unavailable } from "./SectionCard";
 
 export function MusicReleases({ music }: { music: Section<MusicData> }) {
   return (
-    <SectionCard title="New Music" icon="🎵">
+    <SectionCard title="New Music" icon={Disc3}>
       {!music.ok ? (
         <Unavailable section={music} />
       ) : (
@@ -14,22 +15,23 @@ export function MusicReleases({ music }: { music: Section<MusicData> }) {
               href={r.url || undefined}
               target="_blank"
               rel="noopener noreferrer"
-              className="group"
+              className="group rounded-lg outline-offset-4"
             >
               {r.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={r.image}
-                  alt={r.title}
-                  className="aspect-square w-full object-cover rounded-lg bg-black/5 dark:bg-white/5"
+                  alt=""
+                  loading="lazy"
+                  className="aspect-square w-full rounded-lg bg-foreground/5 object-cover transition-transform duration-200 ease-out group-hover:scale-[1.02]"
                 />
               ) : (
-                <div className="aspect-square w-full rounded-lg bg-black/5 dark:bg-white/5" />
+                <div className="aspect-square w-full rounded-lg bg-foreground/5" aria-hidden="true" />
               )}
               <p className="mt-1 text-xs font-medium leading-snug group-hover:underline truncate">
                 {r.title}
               </p>
-              <p className="text-xs text-black/50 dark:text-white/50 truncate">{r.artists}</p>
+              <p className="truncate text-xs text-muted-foreground">{r.artists}</p>
             </a>
           ))}
         </div>

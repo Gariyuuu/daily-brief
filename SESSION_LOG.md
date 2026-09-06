@@ -5,6 +5,73 @@ addition (append-only). This is the first entry — no prior log existed.
 
 ---
 
+## 2026-09-05 — W9 UI/UX overhaul (numbers-first design pass)
+
+**Who:** Claude Code session running the `/overhaul` skill against group **W9** of
+`~/Projects/OVERHAUL-GROUPS.md` (Finance, Markets, Trackers & Briefings — 12 repos).
+Polish pass only: no product architecture, backend logic, schema, auth or route
+changes.
+
+**The shared piece.** A new layer was added to the portfolio design system at
+`~/Projects/.design-system/families/numerics.css` (v1.0) — a *family* layer sitting
+between `MASTER.css` and per-project overrides, holding the decisions that are correct
+for numbers-first surfaces and meaningless elsewhere: tabular numerals, right-aligned
+numeric columns, delta/PnL semantics with a **non-colour** cue, one sparkline stroke
+spec, the shared feed card, freshness/refresh states, and a no-data surface distinct
+from an error. `MASTER.css` itself was NOT modified, so no repo outside W9 is affected
+and no vendored MASTER copy went stale. See `.design-system/CHANGELOG.md` and
+`.design-system/families/README.md`.
+
+**The rule that layer exists to enforce:** a signed number never states its direction
+in colour alone. `.delta[data-dir]` emits ▲/▼/– from `::before`, so a call site cannot
+forget it.
+
+**This repo is the template anchor.** `daily-brief`, `market-brief` and
+`dramabrief` are one template in three verticals; the panel/feed shapes were designed
+here and propagated to the other two on purpose.
+
+**What was done here:**
+
+- **Dependency added: `lucide-react`** — the only new dependency in the whole W9 group.
+  This repo had no icon library and was using emoji as interface icons.
+- Vendored `src/app/design-system/numerics.css`. This app has no theme class (its
+  palette follows the OS via `prefers-color-scheme`), so `<html>` carries
+  `data-numerics-auto` — the family layer's explicit opt-in to OS following. Without
+  it the light delta colours would have landed on a near-black card.
+- **Named the surface tokens** this app never had: `--card`, `--border`,
+  `--muted-foreground`, in both modes, wired through `@theme inline`. The surfaces
+  were previously written inline as Tailwind alpha utilities (`bg-black/[.02]`,
+  `text-black/50`), which the family classes cannot read.
+  - **This included a real accessibility fix, not a rename.** `text-black/50`
+    composites to `#808080` on white — **3.95:1**, under the 4.5:1 minimum for the
+    body text it carried (source names, timestamps, section subheads). The opaque
+    replacement measures **5.28:1** light / **7.63:1** dark.
+- `SectionCard` rewritten to take a `LucideIcon` plus a `meta` slot. `Unavailable`
+  became a proper `.no-data` surface that distinguishes "you have not connected a key"
+  from "the upstream request failed" — a brief that shows the same red warning for
+  both teaches the reader to ignore it.
+- **New** `src/components/FeedItem.tsx` — the shared feed-entry skeleton.
+- **New** `src/components/WeatherIcon.tsx` — maps the WMO code (already stored in the
+  digest) to a Lucide icon. The source's `emoji` field is untouched, so archived
+  digests render identically to today's.
+- All 8 sections converted: Markets and Crypto now use `<Delta>` (the hand-rolled ▲/▼
+  in `StockMovers` became the family component); News uses `FeedItem`; Sports' live
+  game marker is the family freshness dot rather than a 🔴 emoji plus red text; tech
+  story ranks/scores are tabular.
+- `RefreshButton`: icon spins only while the request is in flight (so the motion *is*
+  the loading state, which MASTER exempts from the reduced-motion clamp), and a failed
+  refresh now reports inline via `role="status"` instead of `window.alert()`.
+- Page header carries both readings of the same instant: the absolute build time, and
+  a `<Freshness>` whose 15-minute threshold matches `isStale()` rather than being a
+  separate opinion.
+
+**Verification:** `npx tsc --noEmit` 0 errors; `npm run lint` clean. Tailwind compile of `globals.css` verified to emit the family classes and every token utility (`text-muted-foreground`, `bg-card`, `border-border`, `.num-mono`, `.feed-card-title`). `npm run build` NOT run (no dev server started, live Upstash untouched).
+
+**Not done / deliberately out of scope:** no commits, no push, no deploy. Product
+behaviour, routes, data model and auth are unchanged.
+
+---
+
 ## Session 1 — 2026-08-06 — Documentation audit and handoff doc build
 
 - **Account/agent**: unknown (first documentation-focused session on this repo; no

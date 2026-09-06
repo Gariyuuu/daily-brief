@@ -30,7 +30,7 @@ export default async function ArchiveDayPage({
             day: "numeric",
           })}
         </h1>
-        <p className="text-sm text-black/50 dark:text-white/50">
+        <p className="text-sm text-muted-foreground">
           Generated {formatLocalTime(digest.generatedAt)}
         </p>
       </div>

@@ -73,7 +73,7 @@ export default function ChatWidget() {
         </p>
         <button
           onClick={() => setOpen(false)}
-          className="text-black/50 dark:text-white/50 hover:text-foreground"
+          className="text-muted-foreground transition-colors hover:text-foreground"
           aria-label="Close chat"
         >
           ✕
@@ -81,7 +81,7 @@ export default function ChatWidget() {
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (
-          <p className="text-sm text-black/50 dark:text-white/50">
+          <p className="text-sm text-muted-foreground">
             Ask me anything about today&apos;s weather, news, markets, sports, or anything
             else on your mind.
           </p>
@@ -92,14 +92,14 @@ export default function ChatWidget() {
             className={
               m.role === "user"
                 ? "ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-foreground text-background px-3 py-2 text-sm"
-                : "mr-auto max-w-[85%] rounded-2xl rounded-bl-sm bg-black/5 dark:bg-white/10 px-3 py-2 text-sm whitespace-pre-wrap"
+                : "mr-auto max-w-[85%] rounded-2xl rounded-bl-sm bg-foreground/[.06] px-3 py-2 text-sm whitespace-pre-wrap"
             }
           >
             {m.content}
           </div>
         ))}
         {loading && (
-          <div className="mr-auto flex items-center gap-2 max-w-[85%] rounded-2xl rounded-bl-sm bg-black/5 dark:bg-white/10 px-3 py-2 text-sm text-black/50 dark:text-white/50">
+          <div className="mr-auto flex items-center gap-2 max-w-[85%] rounded-2xl rounded-bl-sm bg-foreground/[.06] px-3 py-2 text-sm text-muted-foreground">
             <ThinkingOrb state="composing" size={20} aria-label="Thinking" />
             Thinking…
           </div>

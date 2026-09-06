@@ -4,6 +4,40 @@ No CHANGELOG.md existed before the 2026-08-06 documentation audit. The entries b
 the pre-audit period are reconstructed directly from `git log` (not invented) — these are
 the repo's only real history. Dates are the actual commit timestamps.
 
+## 2026-09-05 — W9 UI/UX overhaul (numbers-first design pass)
+
+Polish pass via the `/overhaul` skill against group **W9** of
+`~/Projects/OVERHAUL-GROUPS.md`. No product architecture, backend logic, schema, auth
+or route changes. The group's shared decisions now live in a new portfolio design-system
+layer, `~/Projects/.design-system/families/numerics.css` (v1.0), vendored here — see
+`UI_SYSTEM.md`. `MASTER.css` itself was not modified.
+
+### Added
+- **`lucide-react`** — this repo had no icon library and was using emoji as interface
+  icons. This is the only dependency added anywhere in the W9 group.
+- Numerics family layer (vendored), with `data-numerics-auto` on `<html>` because this
+  app follows the OS rather than carrying a theme class.
+- `src/components/FeedItem.tsx` — the feed-entry skeleton shared with `market-brief`
+  and `dramabrief`.
+- `src/components/WeatherIcon.tsx` — maps the stored WMO code to a Lucide icon, so
+  archived digests render identically to today's.
+- A `<Freshness>` line in the page header whose 15-minute threshold matches `isStale()`.
+- Named surface tokens (`--card`, `--border`, `--muted-foreground`) in both modes.
+
+### Fixed
+- **Body text failed contrast.** `text-black/50` composites to `#808080` on white —
+  3.95:1, under the 4.5:1 minimum for the source names, timestamps and section subheads
+  it carried. The opaque `--muted-foreground` replacement measures 5.28:1 light /
+  7.63:1 dark.
+- A failed refresh used `window.alert()`; it now reports inline via `role="status"`.
+- The "unavailable" state showed one warning for both "no API key" and "upstream
+  failed"; those are now visibly different.
+
+### Changed
+- All 8 digest sections converted to the shared template: Lucide icons in place of
+  emoji throughout, `<Delta>` for market and crypto changes, `FeedItem` for news, and
+  the family freshness dot for live games (was a 🔴 emoji plus red text).
+
 ## [Unreleased] — 2026-08-17 — Onboard sync (no app code changed)
 
 Re-verified all docs against `main` at `37f84ef` (10 commits total). Found 3 real code

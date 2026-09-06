@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
+import { Newspaper } from "lucide-react";
 import ChatWidget from "@/components/ChatWidget";
 
 const geistSans = Geist({
@@ -47,19 +48,25 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      /* This app has no theme class -- its palette follows the OS through
+         prefers-color-scheme -- so the numerics layer's dark ramp has nothing
+         to hook onto. data-numerics-auto opts it into the same OS following.
+         Without it the light delta colours would sit on a near-black card. */
+      data-numerics-auto=""
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <header className="sticky top-0 z-40 border-b border-input bg-[var(--background)]/90 backdrop-blur">
           <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between">
-            <Link href="/" className="font-semibold tracking-tight text-lg">
-              🗞️ Daily Brief
+            <Link href="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+              <Newspaper className="size-5" aria-hidden="true" strokeWidth={2} />
+              Daily Brief
             </Link>
             <nav className="flex gap-4 text-sm">
-              <Link href="/" className="hover:underline underline-offset-4">
+              <Link href="/" className="underline-offset-4 transition-colors hover:text-foreground hover:underline">
                 Today
               </Link>
-              <Link href="/archive" className="hover:underline underline-offset-4">
+              <Link href="/archive" className="underline-offset-4 transition-colors hover:text-foreground hover:underline">
                 Archive
               </Link>
             </nav>

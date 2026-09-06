@@ -1,26 +1,29 @@
+import { Terminal } from "lucide-react";
 import { Section, TechData, TechStory } from "@/lib/types";
 import { SectionCard, Unavailable } from "./SectionCard";
 
 function StoryRow({ story, rank }: { story: TechStory; rank: number }) {
   return (
-    <li className="text-sm flex gap-2">
-      <span className="text-black/40 dark:text-white/40 w-6 text-right shrink-0">{rank}</span>
+    <li className="flex gap-2 rounded-md px-1 py-0.5 text-sm transition-colors hover:bg-foreground/[.04]">
+      {/* Rank and score are both numeric columns in a two-up list: tabular
+          figures keep the titles on one left edge across all twenty rows. */}
+      <span className="num w-6 shrink-0 text-right text-muted-foreground">{rank}</span>
       <a
         href={story.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="hover:underline flex-1"
+        className="min-w-0 flex-1 decoration-from-font underline-offset-2 hover:underline"
       >
         {story.title}
       </a>
-      <span className="text-xs text-black/50 dark:text-white/50 shrink-0">{story.score} pts</span>
+      <span className="num shrink-0 text-xs text-muted-foreground">{story.score} pts</span>
     </li>
   );
 }
 
 export function TechNews({ tech }: { tech: Section<TechData> }) {
   return (
-    <SectionCard title="Tech / Hacker News" icon="💻">
+    <SectionCard title="Tech / Hacker News" icon={Terminal}>
       {!tech.ok ? (
         <Unavailable section={tech} />
       ) : (

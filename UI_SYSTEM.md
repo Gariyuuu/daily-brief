@@ -141,3 +141,104 @@ or page). They appear to be scaffold leftovers, not actively used assets.
   consistently (page title → section title → sub-group title).
 - Color contrast not independently measured in this audit (would require rendering the
   app, which was not done).
+
+## The W9 numerics family layer (added 2026-09-05)
+
+**Source of truth:** `~/Projects/.design-system/families/numerics.css` (v1.0).
+**Vendored here as** ``src/app/design-system/numerics.css``, imported from ``src/app/globals.css`` immediately after
+`master.css`. The copy is byte-identical to the source apart from a two-line header.
+**Do not patch the vendored copy** — fix the source and re-vendor, exactly as with
+`MASTER.css`.
+
+### What it is
+
+A *family* layer, sitting between `MASTER.css` and per-project overrides:
+
+```
+MASTER.css  ->  families/numerics.css  ->  overrides/<project>.css  ->  this repo's globals.css
+```
+
+MASTER holds what all 115 portfolio repos need. A family layer holds what one kind of
+surface needs and no one else does. "Green means up" is meaningless in a 3D world or a
+narrative game; tabular numerals are wrong for prose. Twelve numbers-first repos share
+this one (see `~/Projects/OVERHAUL-GROUPS.md` group W9).
+
+### What it provides
+
+| Class | Use |
+|---|---|
+| `.num` | tabular figures on any element |
+| `.num-col` | right-aligned tabular column — **apply to the `<th>` and the `<td>`** |
+| `.num-mono` | monospaced identifier column (ticker, order id) with a slashed zero |
+| `.num-display` | a headline figure |
+| `.delta[data-dir="up\|down\|flat"]` | a signed change (see the rule below) |
+| `.delta-chip` | the same, as a filled pill |
+| `.spark` / `.spark-line` / `.spark-area` / `.spark-dot` | one sparkline stroke spec |
+| `.feed-card` + `-meta` / `-title` / `-body` / `-foot` / `-link` | the shared feed entry |
+| `.freshness[data-state="live\|stale\|offline\|loading"]` + `.freshness-dot` | refresh state |
+| `.no-data` + `.no-data-title` / `.no-data-body` | a surface with a known shape and nothing in it |
+| `.is-stale`, `.num-flash`, `.num-ghost` | stale region, value-change flash, ghost row |
+
+### The rule this layer exists to enforce
+
+**A signed number never states its direction in colour alone.** Red/green is the most
+common colour-vision collision (deuteranopia, ~6% of men) and every surface in this
+family is one where a sign is the point. `.delta` emits ▲/▼/– from `::before`, so a
+call site *cannot* forget it. If a surface genuinely cannot carry the glyph, use
+`data-cue="sign"` (explicit +/−) — still redundant, still non-colour. `data-cue="none"`
+exists only for values that already print their own sign, and using it is a decision to
+be justified, not a default.
+
+`content` is deliberately declared **twice** on `.delta::before`. The second is the
+CSS alt-text form (`content: "▲" / ""`), which marks the glyph decorative so assistive
+tech reads the number rather than "black up-pointing triangle" — but it is only
+understood by Chrome 77+, Firefox 118+, Safari 17.4+. In an older engine that whole
+declaration is invalid and the glyph would vanish, taking the accessible cue with it.
+The plain declaration is the fallback. Do not "clean up" the duplicate.
+
+### Dark mode is opt-in by selector
+
+Dark values attach only to `.dark`, `[data-theme="dark"]` and `[data-scheme="dark"]` —
+never to `prefers-color-scheme`, because a light-only app on a dark-OS machine would
+otherwise inherit the dark ramp on a white background and fail contrast everywhere.
+**This repo has no theme class** — its palette follows the OS through
+`prefers-color-scheme`. `<html>` therefore carries `data-numerics-auto`, the family
+layer's explicit opt-in to OS following. Removing it would leave the light delta
+colours on a near-black card.
+
+### Contrast
+
+Every family token clears **4.5:1 as text** on the MASTER surface stack in both ramps
+(light: up 4.67, down 5.13, flat 5.03, warn 4.54; dark: 8.04 / 5.28 / 5.69 / 7.45).
+Re-measure after any re-tint with `python3 ~/Projects/.design-system/tools/contrast.py <ink> <surface>`.
+
+### Surface tokens (added in the same pass)
+
+This app previously had no `--card`, `--border` or `--muted-foreground`; its surfaces
+were written inline as Tailwind alpha utilities (`bg-black/[.02]`, `text-black/50`),
+which the family classes cannot read. They are now named in `:root` and the
+`prefers-color-scheme: dark` block, and exposed through `@theme inline`.
+
+**`--muted-foreground` was a real accessibility fix, not a rename.** `text-black/50`
+composites to `#808080` on white — **3.95:1**, under the 4.5:1 minimum for the body
+text it carried. The opaque replacement measures 5.28:1 light / 7.63:1 dark.
+
+### The brief template
+
+`daily-brief`, `market-brief` and `dramabrief` are **one template in three verticals**,
+and are kept consistent with each other on purpose. The shared shapes live in:
+
+- `src/components/SectionCard.tsx` — panel chrome (`LucideIcon` + optional `meta` slot)
+  and `Unavailable`, which distinguishes "no API key" from "upstream failed" rather
+  than showing one warning for both.
+- `src/components/FeedItem.tsx` — the feed-entry skeleton.
+- the family layer's `.feed-card*` and `.freshness` classes.
+
+Changing any of those shapes means changing them in all three repos.
+
+### Icons
+
+`lucide-react` was added here (this repo had no icon library and used emoji as
+interface icons). `src/components/WeatherIcon.tsx` maps the **WMO code** — which is
+already stored in the digest — to a Lucide icon, so archived digests render the same
+way as today's. The source's `emoji` field is deliberately left untouched.

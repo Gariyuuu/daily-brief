@@ -1,44 +1,18 @@
+import { Newspaper } from "lucide-react";
 import { Article, NewsData, Section } from "@/lib/types";
 import { SectionCard, Unavailable } from "./SectionCard";
-
-function ArticleRow({ article }: { article: Article }) {
-  return (
-    <a
-      href={article.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex gap-3 py-2 group"
-    >
-      {article.image ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={article.image}
-          alt=""
-          className="w-20 h-14 object-cover rounded-lg shrink-0 bg-black/5 dark:bg-white/5"
-        />
-      ) : (
-        <div className="w-20 h-14 rounded-lg shrink-0 bg-black/5 dark:bg-white/5" />
-      )}
-      <div className="min-w-0">
-        <p className="text-sm font-medium leading-snug group-hover:underline">
-          {article.title}
-        </p>
-        <p className="text-xs text-black/50 dark:text-white/50">{article.source}</p>
-      </div>
-    </a>
-  );
-}
+import { FeedItem } from "./FeedItem";
 
 function ArticleGroup({ title, articles }: { title: string; articles: Article[] }) {
   if (articles.length === 0) return null;
   return (
     <div className="mb-4 last:mb-0">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-black/50 dark:text-white/50 mb-1">
+      <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         {title}
       </h3>
-      <div className="divide-y divide-black/5 dark:divide-white/5">
+      <div className="divide-y divide-border/60">
         {articles.map((a) => (
-          <ArticleRow key={a.url} article={a} />
+          <FeedItem key={a.url} href={a.url} title={a.title} thumbnail={a.image ?? null} source={a.source} />
         ))}
       </div>
     </div>
@@ -47,7 +21,7 @@ function ArticleGroup({ title, articles }: { title: string; articles: Article[] 
 
 export function NewsList({ news }: { news: Section<NewsData> }) {
   return (
-    <SectionCard title="News & Politics" icon="📰">
+    <SectionCard title="News & Politics" icon={Newspaper}>
       {!news.ok ? (
         <Unavailable section={news} />
       ) : (

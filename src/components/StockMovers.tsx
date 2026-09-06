@@ -1,12 +1,18 @@
+import { Activity, Bot, LineChart, TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
 import { Mover, Quote, Section, StocksData } from "@/lib/types";
 import { SectionCard, Unavailable } from "./SectionCard";
+import { Delta } from "./numeric/Delta";
 
-function Change({ value }: { value: number }) {
-  const positive = value >= 0;
+/** The hand-rolled ▲/▼ became the family's Delta: same glyphs, but the colour
+ *  ramp, the tabular figures and the screen-reader phrasing now come from one
+ *  place shared by all three briefs. */
+function Change({ value, label }: { value: number; label: string }) {
   return (
-    <span className={positive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}>
-      {positive ? "▲" : "▼"} {Math.abs(value).toFixed(2)}%
-    </span>
+    <Delta
+      value={value}
+      format={(v) => `${Math.abs(v).toFixed(2)}%`}
+      srLabel={`${label}: ${value >= 0 ? "up" : "down"} ${Math.abs(value).toFixed(2)} percent`}
+    />
   );
 }
 
@@ -20,19 +26,20 @@ function MoverRow({ mover }: { mover: Mover }) {
       href={yahooFinanceUrl(mover.symbol)}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center justify-between text-sm py-1 hover:underline"
+      className="group flex items-center justify-between gap-2 rounded-md px-1 py-1 text-sm transition-colors hover:bg-foreground/[.04]"
     >
-      <span className="font-medium">{mover.symbol}</span>
-      <span className="text-black/50 dark:text-white/50 truncate mx-2 flex-1">{mover.name}</span>
-      <Change value={mover.changePercent} />
+      <span className="num-mono shrink-0 font-medium">{mover.symbol}</span>
+      <span className="min-w-0 flex-1 truncate text-muted-foreground">{mover.name}</span>
+      <Change value={mover.changePercent} label={`${mover.symbol} ${mover.name}`} />
     </a>
   );
 }
 
-function MoverColumn({ title, movers }: { title: string; movers: Mover[] }) {
+function MoverColumn({ title, icon: Icon, movers }: { title: string; icon: LucideIcon; movers: Mover[] }) {
   return (
     <div>
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-black/50 dark:text-white/50 mb-1">
+      <h3 className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <Icon className="size-3.5" aria-hidden="true" />
         {title}
       </h3>
       <div className="max-h-80 overflow-y-auto pr-1">
@@ -46,7 +53,7 @@ function MoverColumn({ title, movers }: { title: string; movers: Mover[] }) {
 
 export function StockMovers({ stocks }: { stocks: Section<StocksData> }) {
   return (
-    <SectionCard title="Markets" icon="📈">
+    <SectionCard title="Markets" icon={LineChart}>
       {!stocks.ok ? (
         <Unavailable section={stocks} />
       ) : (
@@ -60,18 +67,19 @@ export function StockMovers({ stocks }: { stocks: Section<StocksData> }) {
                 rel="noopener noreferrer"
                 className="text-sm hover:underline"
               >
-                <p className="text-xs text-black/50 dark:text-white/50">{q.name}</p>
-                <p className="font-semibold">
-                  {q.price.toLocaleString()} <Change value={q.changePercent} />
+                <p className="text-xs text-muted-foreground">{q.name}</p>
+                <p className="num flex items-baseline gap-2 font-semibold">
+                  {q.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <Change value={q.changePercent} label={q.name} />
                 </p>
               </a>
             ))}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <MoverColumn title="🤖 AI Watchlist" movers={stocks.aiWatchlist} />
-            <MoverColumn title="Most Active" movers={stocks.actives} />
-            <MoverColumn title="Top Gainers" movers={stocks.gainers} />
-            <MoverColumn title="Top Losers" movers={stocks.losers} />
+            <MoverColumn title="AI Watchlist" icon={Bot} movers={stocks.aiWatchlist} />
+            <MoverColumn title="Most Active" icon={Activity} movers={stocks.actives} />
+            <MoverColumn title="Top Gainers" icon={TrendingUp} movers={stocks.gainers} />
+            <MoverColumn title="Top Losers" icon={TrendingDown} movers={stocks.losers} />
           </div>
         </div>
       )}
